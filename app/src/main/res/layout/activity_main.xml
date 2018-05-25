@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+           <include
+               layout="@layout/app_bar"
+               android:id="@+id/mainAppBar"/>
+            
+            <Spinner
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:id="@+id/nameSpiner"
+                android:layout_below="@+id/mainAppBar"
+                android:spinnerMode="dropdown">
+            </Spinner>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_below="@+id/nameSpiner"
+                android:layout_margin="10dp"
+                android:id="@+id/photoLinearLyt">
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:hint="Photo Title"
+                    android:focusable="false"/>
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/photoClickBtn"
+                    android:text="photo"
+                    />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:id="@+id/photoView"
+                android:visibility="gone"
+                android:layout_below="@+id/photoLinearLyt"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_below="@+id/photoView"
+                android:layout_margin="10dp"
+                android:id="@+id/videoLinearLyt">
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:hint="Video Title"
+                    android:focusable="false"/>
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/videoClickBtn"
+                    android:text="Video"
+                    />
+            </LinearLayout>
+
+            <VideoView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:id="@+id/videoView"
+                android:visibility="gone"
+                android:layout_below="@id/videoLinearLyt"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_below="@+id/videoView"
+                android:hint="Type Your Message"
+                android:layout_margin="10dp"
+                android:gravity="left"
+                android:elevation="1dp"
+                android:focusable="false"
+                android:id="@+id/messageEditText"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/messageEditText"
+                android:text="Submit Form"
+                android:layout_margin="10dp"
+                android:id="@+id/submitBtn"/>
+
+        </RelativeLayout>
+    </ScrollView>
+
+</RelativeLayout>
