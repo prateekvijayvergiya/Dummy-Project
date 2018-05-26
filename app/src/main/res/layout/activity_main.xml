@@ -39,8 +39,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
-                    android:hint="Photo Title"
-                    android:focusable="false"/>
+                    android:hint="Photo Title" />
 
                 <Button
                     android:layout_width="0dp"
@@ -53,7 +52,7 @@
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="200dp"
                 android:layout_margin="20dp"
                 android:id="@+id/photoView"
                 android:visibility="gone"
@@ -71,8 +70,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
-                    android:hint="Video Title"
-                    android:focusable="false"/>
+                    android:hint="Video Title" />
 
                 <Button
                     android:layout_width="0dp"
@@ -85,7 +83,7 @@
 
             <VideoView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="200dp"
                 android:layout_margin="20dp"
                 android:id="@+id/videoView"
                 android:visibility="gone"
@@ -93,13 +91,12 @@
 
             <EditText
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="50dp"
                 android:layout_below="@+id/videoView"
                 android:hint="Type Your Message"
                 android:layout_margin="10dp"
                 android:gravity="left"
                 android:elevation="1dp"
-                android:focusable="false"
                 android:id="@+id/messageEditText"/>
 
             <Button
