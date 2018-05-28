@@ -27,19 +27,32 @@
                 android:spinnerMode="dropdown">
             </Spinner>
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:text="Photo Title   (फोटो शीर्षक)"
+                android:textSize="20dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_below="@+id/nameSpiner"
+                android:id="@+id/photoText"/>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_below="@+id/nameSpiner"
-                android:layout_margin="10dp"
+                android:layout_below="@+id/photoText"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:id="@+id/photoLinearLyt">
 
                 <EditText
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
-                    android:hint="Photo Title" />
+                    android:id="@+id/photoTitle"
+                    android:layout_marginTop="5dp"/>
 
                 <Button
                     android:layout_width="0dp"
@@ -58,19 +71,33 @@
                 android:visibility="gone"
                 android:layout_below="@+id/photoLinearLyt"/>
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:text="Video Title   (वीडियो शीषर्क)"
+                android:textSize="20dp"
+                android:layout_below="@+id/photoView"
+                android:id="@+id/videoText"/>
+
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_below="@+id/photoView"
-                android:layout_margin="10dp"
+                android:layout_below="@+id/videoText"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:id="@+id/videoLinearLyt">
 
                 <EditText
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
-                    android:hint="Video Title" />
+                    android:id="@+id/videoTitle"
+                    android:layout_marginTop="5dp"/>
 
                 <Button
                     android:layout_width="0dp"
@@ -89,21 +116,33 @@
                 android:visibility="gone"
                 android:layout_below="@id/videoLinearLyt"/>
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="15dp"
+                android:text="Type your Message  (अपना संदेश टाइप करें)"
+                android:textSize="20dp"
+                android:layout_below="@+id/videoView"
+                android:id="@+id/messagetext"/>
+
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_below="@+id/videoView"
-                android:hint="Type Your Message"
-                android:layout_margin="10dp"
+                android:layout_below="@+id/messagetext"
                 android:gravity="left"
                 android:elevation="1dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
                 android:id="@+id/messageEditText"/>
 
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/messageEditText"
-                android:text="Submit Form"
+                android:text="Submit Form  (फार्म जमा करें)"
                 android:layout_margin="10dp"
                 android:id="@+id/submitBtn"/>
 

@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">DummyProject</string>
 
-   <string-array name="nameArray">
-       <item>Dummy</item>
-       <item>Dummy</item>
-       <item>Dummy</item>
-       <item>Dummy</item>
-       <item>Dummy</item>
-   </string-array>
+    <string-array name="nameArray">
+        <item>Dummy</item>
+        <item>Dummy</item>
+        <item>Dummy</item>
+        <item>Dummy</item>
+        <item>Dummy</item>
+    </string-array>
 </resources>

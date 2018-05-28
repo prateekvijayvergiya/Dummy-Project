@@ -17,9 +17,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.MediaController;
 import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -46,8 +49,10 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
-    private String mCurrentPhotoPath,mCurrentVideoPath,uploadTimeStamp;
+    private EditText mPhotoTitleText,mVideoTitleText,mMessageText;
+    private String mCurrentPhotoPath,mCurrentVideoPath,uploadTimeStamp,spinnerContent;
     private File image,video;
+    String mPhotoPath,mVideoPath;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,9 +64,28 @@ public class MainActivity extends AppCompatActivity {
 
         mNameSpinner = (Spinner) findViewById(R.id.nameSpiner);
         mNameSpinner = initSpinner(mNameSpinner, R.array.nameArray);
+        mPhotoTitleText = (EditText) findViewById(R.id.photoTitle);
+        mVideoTitleText = (EditText) findViewById(R.id.videoTitle);
+        mMessageText = (EditText) findViewById(R.id.messageEditText);
         mPhotoBtn = (Button) findViewById(R.id.photoClickBtn);
         mVideoBtn = (Button) findViewById(R.id.videoClickBtn);
         mSubmitBtn = (Button) findViewById(R.id.submitBtn);
+
+
+        //For selecting content of Spinner
+       mNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+           @Override
+           public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+               spinnerContent = parent.getItemAtPosition(position).toString();
+           }
+
+           @Override
+           public void onNothingSelected(AdapterView<?> parent) {
+
+               spinnerContent = parent.getSelectedItem().toString();
+           }
+       });
+
 
 
         //for clicking of Photo button
@@ -70,9 +94,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 CAPTURE_CODE = "PHOTO";
-                CharSequence options[] = new CharSequence[]{"Choose from Gallery","Camera"};
+                CharSequence options[] = new CharSequence[]{"Choose from Gallery (गैलरी से चयन करो)","Camera (कैमरा)"};
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Select Option");
+                builder.setTitle("Select Option (विकल्प चुनें)");
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int position) {
@@ -115,9 +139,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 CAPTURE_CODE = "VIDEO";
-                CharSequence options[] = new CharSequence[]{"Choose from Gallery","Camera"};
+                CharSequence options[] = new CharSequence[]{"Choose from Gallery (गैलरी से चयन करो)","Camera (कैमरा)"};
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Select Option");
+                builder.setTitle("Select Option (विकल्प चुनें)");
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int position) {
@@ -161,6 +185,23 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+        //For submitting the form
+        mSubmitBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String name = spinnerContent;
+                String photoTitleText = mPhotoTitleText.getText().toString();
+                String videoTitleText = mVideoTitleText.getText().toString();
+                String messageText = mMessageText.getText().toString();
+                Connection connection = new Connection();
+            }
+        });
+
+
+
     }
 
     //For initialise Spinner
@@ -171,6 +212,9 @@ public class MainActivity extends AppCompatActivity {
         s.setAdapter(adapter);
         return s;
     }
+
+
+
 
 
     //Request runtime permission to users
@@ -302,6 +346,8 @@ public class MainActivity extends AppCompatActivity {
                    mImageShow = (ImageView)findViewById(R.id.photoView);
                    mImageShow.setVisibility(View.VISIBLE);
                    mImageShow.setImageURI(uri);
+                   mPhotoPath = uri.getPath();
+                   Log.v("TAG","path of image");
                }
                break;
 
@@ -316,6 +362,7 @@ public class MainActivity extends AppCompatActivity {
                    mImageShow.setImageURI(uri);
                    //filepath = imageUri.toString();
                    Log.v("Tag","Image Done");
+                   mPhotoPath = uri.getPath();
                }
                break;
 
@@ -326,6 +373,10 @@ public class MainActivity extends AppCompatActivity {
                   mVideoShow = (VideoView) findViewById(R.id.videoView);
                   mVideoShow.setVisibility(View.VISIBLE);
                   mVideoShow.setVideoURI(uri);
+                  MediaController mediaController = new MediaController(this);
+                  mediaController.setAnchorView(mVideoShow);
+                  mVideoShow.setMediaController(mediaController);
+                  mVideoPath = uri.getPath();
               }
 
            break;
@@ -334,14 +385,17 @@ public class MainActivity extends AppCompatActivity {
 
                if (resultCode == RESULT_OK){
                    galleryAddVideo();
-                   Log.v("TAG","Gallery saved");
+                   /*Log.v("TAG","Gallery saved");
                    video = new File(mCurrentVideoPath);
-                   Uri videoUri = Uri.fromFile(video);
+                   Uri videoUri = Uri.fromFile(video);*/
+                   Uri videoUri = data.getData();
                    mVideoShow = (VideoView) findViewById(R.id.videoView);
                    mVideoShow.setVisibility(View.VISIBLE);
                    mVideoShow.setVideoURI(videoUri);
-                   //filepath = imageUri.toString();
-                   Log.v("Tag","Image Done");
+                   MediaController mediaController = new MediaController(this);
+                   mediaController.setAnchorView(mVideoShow);
+                   mVideoShow.setMediaController(mediaController);
+                   mVideoPath = videoUri.getPath();
                }
 
 
