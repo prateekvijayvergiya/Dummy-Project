@@ -15,6 +15,7 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,10 +28,17 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.madprateek.dummyproject.HelperClasses.DatabaseHelper;
+import com.madprateek.dummyproject.HelperClasses.MyFTPClientFunctions;
+import com.madprateek.dummyproject.ModelClasses.AttachmentModel;
+import com.madprateek.dummyproject.ModelClasses.BaselineModel;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,13 +54,20 @@ public class MainActivity extends AppCompatActivity {
     private int REQUEST_IMAGE_CAPTURE = 15;
     private int REQUEST_VIDEO_CAPTURE = 25;
 
+    private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
+    private static final String username = "ftpfs2001";
+    private static final String password = "u701aC/}9S";
+    private MyFTPClientFunctions ftpclient = null;
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
     private EditText mPhotoTitleText,mVideoTitleText,mMessageText;
-    private String mCurrentPhotoPath,mCurrentVideoPath,uploadTimeStamp,spinnerContent;
+    private String mCurrentPhotoPath,mCurrentVideoPath,uploadTimeStamp,spinnerContent,mMimeType;
     private File image,video;
     String mPhotoPath,mVideoPath;
+    private DatabaseHelper db;
+    String baseId;
+    Boolean imageStatus,videoStatus,uploadvideoStatus,uploadImageStatus;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
         mPhotoBtn = (Button) findViewById(R.id.photoClickBtn);
         mVideoBtn = (Button) findViewById(R.id.videoClickBtn);
         mSubmitBtn = (Button) findViewById(R.id.submitBtn);
+        db = new DatabaseHelper(this);
+        ftpclient = new MyFTPClientFunctions();
 
 
         //For selecting content of Spinner
@@ -196,12 +213,65 @@ public class MainActivity extends AppCompatActivity {
                 String photoTitleText = mPhotoTitleText.getText().toString();
                 String videoTitleText = mVideoTitleText.getText().toString();
                 String messageText = mMessageText.getText().toString();
-                Connection connection = new Connection();
+
+                //for getting the empty text
+                if (!TextUtils.isEmpty(photoTitleText)){
+                    photoTitleText = photoTitleText;
+                }else {
+                    photoTitleText = null;
+                }
+                if (!TextUtils.isEmpty(videoTitleText)){
+                    videoTitleText = videoTitleText;
+                }else {
+                    videoTitleText = null;
+                }
+                if (!TextUtils.isEmpty(messageText)){
+                    messageText = messageText;
+                }else {
+                    messageText = null;
+                }
+
+                //for getting the mime type
+                if (!TextUtils.isEmpty(mPhotoPath) && !TextUtils.isEmpty(mVideoPath)){
+                    mMimeType = "JPEG/mp4";
+                }else if (!TextUtils.isEmpty(mPhotoPath)){
+                    mMimeType = "JPEG";
+                }else mMimeType = "mp4";
+
+
+                //for setting video and photo path
+                if (!TextUtils.isEmpty(mPhotoPath)){
+                    mPhotoPath = mPhotoPath;
+                }else mPhotoPath = null;
+                if (!TextUtils.isEmpty(mVideoPath)){
+                    mVideoPath = mVideoPath;
+                }else mVideoPath = null;
+
+                storeBaseline(name,photoTitleText,videoTitleText,messageText);
+                storeAttachment(baseId,"0","0",mPhotoPath,mVideoPath,mMimeType);
+                //showDataBasseline();
+                //showDataAttachment();
+
+                uploadData();
+                Log.v("TAG","upload data called");
+
             }
         });
 
+    }
 
+    private void storeAttachment(String id, String s, String s1, String mPhotoPath, String mVideoPath, String mMimeType) {
+        AttachmentModel attach = new AttachmentModel(id,s,s1,mPhotoPath,mVideoPath,mMimeType);
+        db.addAttachment(attach);
+        Log.v("TAG - attachment","Data inserted row created in attachment");
+    }
 
+    private void storeBaseline(String spinnerContent, String photoTitleText, String videoTitleText, String messageText) {
+        BaselineModel base = new BaselineModel(spinnerContent, photoTitleText, videoTitleText, messageText);
+        long Id = db.addBaseline(base);
+        //baseId = Long.toString(Id);
+        baseId = String.valueOf(Id);
+        Log.v("TAG - Baseline","Data inserted row created in Baseline");
     }
 
     //For initialise Spinner
@@ -215,6 +285,51 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    //For showing data of baseline on logs
+    private void showDataBasseline(){
+
+        List<BaselineModel> put = db.getAllBaseline();
+        for (BaselineModel base : put){
+
+            String dId = base.getId();
+            String name = base.getName();
+            String dphoto = base.getPhotoTitle();
+            String dVideo = base.getVideoTitle();
+            String dmessage = base.getMessage();
+            HashMap<String,String> details = new HashMap<>();
+            details.put("id",dId);
+            details.put("\nname",name);
+            details.put("\nphoto",dphoto);
+            details.put("\nvideo",dVideo);
+            details.put("\nmessage",dmessage);
+            Log.v("Show Details",String.valueOf(details));
+        }
+    }
+
+    //For showing data of attachment on logs
+    private void showDataAttachment(){
+
+        List<AttachmentModel> put = db.getAllAttachments();
+        for (AttachmentModel attach : put){
+
+            String dId = attach.getId2();
+            String fId = attach.getBaselineId();
+            String pPath = attach.getPhotoPath();
+            String vPath = attach.getVideoPath();
+            String pStatus = attach.getPhotoStatus();
+            String vStatus = attach.getVideoStatus();
+            String type = attach.getMimeType();
+            HashMap<String,String> details = new HashMap<>();
+            details.put("dId",dId);
+            details.put("\nfId",fId);
+            details.put("\npPath",pPath);
+            details.put("\nvpath",vPath);
+            details.put("\npStatus",pStatus);
+            details.put("\nvStatus",vStatus);
+            details.put("\ntype",type);
+            Log.v("Show Details",String.valueOf(details));
+        }
+    }
 
 
     //Request runtime permission to users
@@ -351,6 +466,7 @@ public class MainActivity extends AppCompatActivity {
                }
                break;
 
+               //Image capture
            case 15:
                if (resultCode == RESULT_OK){
                    galleryAddPic();
@@ -381,14 +497,13 @@ public class MainActivity extends AppCompatActivity {
 
            break;
 
+              //video capture
            case 25:
 
                if (resultCode == RESULT_OK){
                    galleryAddVideo();
-                   /*Log.v("TAG","Gallery saved");
                    video = new File(mCurrentVideoPath);
-                   Uri videoUri = Uri.fromFile(video);*/
-                   Uri videoUri = data.getData();
+                   Uri videoUri = Uri.fromFile(video);
                    mVideoShow = (VideoView) findViewById(R.id.videoView);
                    mVideoShow.setVisibility(View.VISIBLE);
                    mVideoShow.setVideoURI(videoUri);
@@ -458,5 +573,153 @@ public class MainActivity extends AppCompatActivity {
         mCurrentVideoPath = video.getAbsolutePath();
         Log.v("TAG","From createFile" + mCurrentVideoPath);
         return video;
+    }
+
+
+    //For uploading final Data to server
+    public void uploadData(){
+
+        Connection connection = new Connection();
+        if ( connection.isConnectingToInternet(getApplicationContext())){
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+
+                    List<AttachmentModel> put = db.getAllAttachments();
+                    if (put != null){
+
+                        for (AttachmentModel attach : put){
+
+                            if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath())){
+
+                                //imageStatus = uploadImage(attach.getPhotoPath());
+                                //videoStatus = uploadVideo(attach.getVideoPath());
+                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath());
+                                db.deleteAttachment(attach);
+                            }else if (!TextUtils.isEmpty(attach.getPhotoPath())){
+
+                                imageStatus = uploadImage(attach.getPhotoPath());
+                                db.deleteAttachment(attach);
+                            }else {
+
+                                videoStatus = uploadVideo(attach.getVideoPath());
+                                db.deleteAttachment(attach);
+                            }
+
+                        }
+                    }
+                }
+            }).start();
+        }
+        else {
+
+            Toast.makeText(this, "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void uploadBoth(final String photoPath, final String videoPath) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                boolean status = false;
+                // host – your FTP address
+                // username & password – for your secured login
+                // 21 default gateway for FTP
+                status = ftpclient.ftpConnect(host, username, password, 21);
+                if (status) {
+                    Log.d("TAG", "Connection Success");
+                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
+                    if (uploadImageStatus){
+                        Log.v("TAG","Uploading image successful");
+                        disconnect();
+                    }
+                } else {
+                    Log.d("TAG", "Connection failed from image");
+                }
+
+                boolean status2 = false;
+                // host – your FTP address
+                // username & password – for your secured login
+                // 21 default gateway for FTP
+                status2 = ftpclient.ftpConnect(host, username, password, 21);
+                if (status) {
+                    Log.d("TAG", "Connection Success");
+                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/Videos_" + uploadTimeStamp + ".mp4","soochana",getApplicationContext());
+                    if (uploadvideoStatus){
+                        Log.v("TAG","Uploading video successful");
+                        disconnect();
+                    }
+                } else {
+                    Log.d("TAG", "Connection failed from image");
+                }
+
+            }
+        }).start();
+    }
+
+
+    //For uploading image on FTP Server
+    public Boolean uploadImage(final String photoPath){
+
+        new Thread(new Runnable() {
+            public void run() {
+                boolean status = false;
+                // host – your FTP address
+                // username & password – for your secured login
+                // 21 default gateway for FTP
+                status = ftpclient.ftpConnect(host, username, password, 21);
+                if (status) {
+                    Log.d("TAG", "Connection Success");
+                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
+                    if (uploadImageStatus){
+                        Log.v("TAG","Uploading image successful");
+                        disconnect();
+                    }
+                } else {
+                    Log.d("TAG", "Connection failed from image");
+                }
+            }
+        }).start();
+        return uploadImageStatus;
+    }
+
+
+    //For uploading video on FTP server
+    public Boolean uploadVideo(final String videoPath){
+
+        new Thread(new Runnable() {
+            public void run() {
+                boolean status = false;
+                // host – your FTP address
+                // username & password – for your secured login
+                // 21 default gateway for FTP
+                status = ftpclient.ftpConnect(host, username, password, 21);
+                if (status) {
+                    Log.d("TAG", "Connection Success");
+                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/Videos_" + uploadTimeStamp + ".mp4","soochana",getApplicationContext());
+                    if (uploadvideoStatus){
+                        Log.v("TAG","Uploading video successful");
+                        disconnect();
+                    }
+                } else {
+                    Log.d("TAG", "Connection failed from video");
+                }
+            }
+        }).start();
+        return uploadvideoStatus;
+
+    }
+
+
+    //For disconnecting from FTP server
+    private void disconnect() {
+
+        new Thread(new Runnable() {
+            public void run() {
+                ftpclient.ftpDisconnect();
+            }
+        }).start();
     }
 }

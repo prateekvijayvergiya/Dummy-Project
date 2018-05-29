@@ -2,16 +2,15 @@ package com.madprateek.dummyproject.ModelClasses;
 
 public class AttachmentModel {
 
-    private int baselineId;
+    private String baselineId;
     private String id2;
-    private int photoStatus;
-    private int videoStatus;
+    private String photoStatus;
+    private String videoStatus;
     private String photoPath;
     private String videoPath;
     private String mimeType;
 
-    public AttachmentModel(String id2,int baselineId, int photoStatus, int videoStatus, String photoPath, String videoPath, String mimeType) {
-        this.id2 = id2;
+    public AttachmentModel(String baselineId, String photoStatus, String videoStatus, String photoPath, String videoPath, String mimeType) {
         this.baselineId = baselineId;
         this.photoStatus = photoStatus;
         this.videoStatus = videoStatus;
@@ -24,28 +23,28 @@ public class AttachmentModel {
 
     }
 
-    public int getBaselineId() {
+    public String getBaselineId() {
 
         return baselineId;
     }
 
-    public void setBaselineId(Integer baselineId) {
+    public void setBaselineId(String baselineId) {
         this.baselineId = baselineId;
     }
 
-    public int getPhotoStatus() {
+    public String getPhotoStatus() {
         return photoStatus;
     }
 
-    public void setPhotoStatus(Integer photoStatus) {
+    public void setPhotoStatus(String photoStatus) {
         this.photoStatus = photoStatus;
     }
 
-    public int getVideoStatus() {
+    public String getVideoStatus() {
         return videoStatus;
     }
 
-    public void setVideoStatus(Integer videoStatus) {
+    public void setVideoStatus(String videoStatus) {
         this.videoStatus = videoStatus;
     }
 

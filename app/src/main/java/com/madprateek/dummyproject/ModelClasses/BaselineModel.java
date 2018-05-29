@@ -28,12 +28,11 @@ public class BaselineModel {
         this.id = id;
     }
 
-    public BaselineModel(String id, String name, String photoTitle, String videoTitle, String message) {
+    public BaselineModel( String name, String photoTitle, String videoTitle, String message) {
         this.photoTitle = photoTitle;
         this.videoTitle = videoTitle;
         this.message = message;
         this.name = name;
-        this.id = id;
 
     }
 
