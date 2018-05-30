@@ -47,12 +47,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.v("TAG-Table creation","Baseline table created");
 
         String CREATION_ATTACHMENTS = "CREATE TABLE "+ATTACHMENTS+" (" + KEY_ID_2 + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + KEY_BASELINE_ID + " INTEGER NOT NULL ," + KEY_PHOTO_STATUS + " INTEGER,"
-                + KEY_VIDEO_STATUS + " INTEGER," + KEY_PHOTO_PATH + " TEXT," + KEY_VIDEO_PATH + " TEXT," + KEY_MIMETYPE + " TEXT," +
-                "FOREIGN KEY ("+KEY_BASELINE_ID+") REFERENCES "+BASELINE+" ("+KEY_ID+"))";
+                + KEY_BASELINE_ID + " INTEGER ," + KEY_PHOTO_STATUS + " INTEGER,"
+                + KEY_VIDEO_STATUS + " INTEGER," + KEY_PHOTO_PATH + " TEXT," + KEY_VIDEO_PATH + " TEXT," + KEY_MIMETYPE + " TEXT)";
         db.execSQL(CREATION_ATTACHMENTS);
         Log.v("TAG- Table creation", "Attachments table created");
     }
+           //+ "FOREIGN KEY ("+KEY_BASELINE_ID+") REFERENCES "+BASELINE+" ("+KEY_ID+"))";
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -64,13 +64,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.onCreate(db);
     }
 
-    @Override
+  /*  @Override
     public void onOpen(SQLiteDatabase db) {
         super.onOpen(db);
         if (!db.isReadOnly()){
             db.execSQL("PRAGMA foreign_keys = ON;");
         }
-    }
+    }*/
 
     public long addBaseline(BaselineModel base){
 
@@ -153,13 +153,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void deleteBaseline(BaselineModel base){
-        db = this.getReadableDatabase();
-        db.delete(BASELINE, KEY_ID + " = ?",new String[]{base.getId()});
+        db = this.getWritableDatabase();
+        db.delete(BASELINE, KEY_ID + " = ?", new String[]{String.valueOf(base.getId())});
         db.close();
     }
 
     public void deleteAttachment(AttachmentModel attach){
-        db = this.getReadableDatabase();
+        db = this.getWritableDatabase();
         db.delete(ATTACHMENTS, KEY_ID_2 + " = ?",new String[]{attach.getId2()});
         db.close();
     }
@@ -167,7 +167,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void updateAttachmentPhotoStatus(AttachmentModel attach){
         db = this.getReadableDatabase();
         ContentValues values = new ContentValues();
-        values.put(KEY_PHOTO_STATUS,attach.getPhotoStatus());
+        values.put(KEY_PHOTO_STATUS,"1");
         db.update(ATTACHMENTS, values, KEY_ID_2 + " = ?",new String[]{attach.getId2()});
         db.close();
 
@@ -176,8 +176,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void updateAttachmentPhotoVideoStatus(AttachmentModel attach){
         db = this.getReadableDatabase();
         ContentValues values = new ContentValues();
-        values.put(KEY_PHOTO_STATUS,attach.getPhotoStatus());
-        values.put(KEY_VIDEO_STATUS,attach.getVideoStatus());
+        values.put(KEY_PHOTO_STATUS,"1");
+        values.put(KEY_VIDEO_STATUS,"1");
         db.update(ATTACHMENTS, values, KEY_ID_2 + " = ?",new String[]{attach.getId2()});
         db.close();
 
@@ -186,7 +186,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void updateAttachmentVideoStatus(AttachmentModel attach){
         db = this.getReadableDatabase();
         ContentValues values = new ContentValues();
-        values.put(KEY_VIDEO_STATUS,attach.getVideoStatus());
+        values.put(KEY_VIDEO_STATUS,"1");
         db.update(ATTACHMENTS, values, KEY_ID_2 + " = ?",new String[]{attach.getId2()});
         db.close();
 

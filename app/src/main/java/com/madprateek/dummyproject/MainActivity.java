@@ -28,8 +28,14 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.madprateek.dummyproject.HelperClasses.DatabaseHelper;
 import com.madprateek.dummyproject.HelperClasses.MyFTPClientFunctions;
+import com.madprateek.dummyproject.HelperClasses.MySingleton;
 import com.madprateek.dummyproject.ModelClasses.AttachmentModel;
 import com.madprateek.dummyproject.ModelClasses.BaselineModel;
 
@@ -39,6 +45,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
     private MyFTPClientFunctions ftpclient = null;
+    String server_url_baseline = "http://192.168.12.160/Baseline.php";
+    String server_url_attachments = "http://192.168.12.160/attachments.php";
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
@@ -67,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
     String mPhotoPath,mVideoPath;
     private DatabaseHelper db;
     String baseId;
+    int mFlag = 0;
+    //File image;
     Boolean imageStatus,videoStatus,uploadvideoStatus,uploadImageStatus;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +99,13 @@ public class MainActivity extends AppCompatActivity {
         db = new DatabaseHelper(this);
         ftpclient = new MyFTPClientFunctions();
 
+
+        //For getting the TimeStamp
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        uploadTimeStamp = timeStamp;
+
+
+        //uploadData();
 
         //For selecting content of Spinner
        mNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -218,17 +236,17 @@ public class MainActivity extends AppCompatActivity {
                 if (!TextUtils.isEmpty(photoTitleText)){
                     photoTitleText = photoTitleText;
                 }else {
-                    photoTitleText = null;
+                    photoTitleText = "-";
                 }
                 if (!TextUtils.isEmpty(videoTitleText)){
                     videoTitleText = videoTitleText;
                 }else {
-                    videoTitleText = null;
+                    videoTitleText = "-";
                 }
                 if (!TextUtils.isEmpty(messageText)){
                     messageText = messageText;
                 }else {
-                    messageText = null;
+                    messageText = "-";
                 }
 
                 //for getting the mime type
@@ -242,10 +260,10 @@ public class MainActivity extends AppCompatActivity {
                 //for setting video and photo path
                 if (!TextUtils.isEmpty(mPhotoPath)){
                     mPhotoPath = mPhotoPath;
-                }else mPhotoPath = null;
+                }else mPhotoPath = "";
                 if (!TextUtils.isEmpty(mVideoPath)){
                     mVideoPath = mVideoPath;
-                }else mVideoPath = null;
+                }else mVideoPath = "";
 
                 storeBaseline(name,photoTitleText,videoTitleText,messageText);
                 storeAttachment(baseId,"0","0",mPhotoPath,mVideoPath,mMimeType);
@@ -544,7 +562,7 @@ public class MainActivity extends AppCompatActivity {
         uploadTimeStamp = timeStamp;
         String imageFileName = "JPG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
+        image = File.createTempFile(
                 imageFileName,  /* prefix */
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
@@ -595,16 +613,22 @@ public class MainActivity extends AppCompatActivity {
 
                                 //imageStatus = uploadImage(attach.getPhotoPath());
                                 //videoStatus = uploadVideo(attach.getVideoPath());
-                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath());
-                                db.deleteAttachment(attach);
-                            }else if (!TextUtils.isEmpty(attach.getPhotoPath())){
+                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath(),attach);
+                                db.updateAttachmentPhotoVideoStatus(attach);
+                            }else if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())){
 
-                                imageStatus = uploadImage(attach.getPhotoPath());
-                                db.deleteAttachment(attach);
-                            }else {
+                                 uploadImage(attach.getPhotoPath(),attach);
+                                //db.deleteAttachment(attach);
+                               /* if (flag == 1){
+                                    db.updateAttachmentPhotoStatus(attach);
+                                    uploadDataBaseline();
+                                    Log.v("TAG","UploadDataBaseline called");
+                                    //uploadDataAttachment();
+                                }*/
 
-                                videoStatus = uploadVideo(attach.getVideoPath());
-                                db.deleteAttachment(attach);
+                            }else if (!TextUtils.isEmpty(attach.getVideoPath())  && TextUtils.isEmpty(attach.getPhotoPath())){
+
+                                uploadVideo(attach.getVideoPath(),attach);
                             }
 
                         }
@@ -618,7 +642,127 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void uploadBoth(final String photoPath, final String videoPath) {
+
+    //For uploading data on given server of attachments
+    private void uploadDataAttachment() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                List<AttachmentModel> put = db.getAllAttachments();
+                if (put != null){
+
+                    for (final AttachmentModel attach : put){
+
+                        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+
+                                Toast.makeText(MainActivity.this,"Response :"+response,Toast.LENGTH_LONG).show();
+                                Log.v("TAG","upload on xampp of attachment");
+                                Log.v("TAG",response);
+                                db.deleteAttachment(attach);
+                                Log.v("TAG","Record deleted from attachment");
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+
+                                Toast.makeText(MainActivity.this,"some error found .....",Toast.LENGTH_SHORT).show();
+                                error.printStackTrace();
+                                Log.v("TAG","upload on xampp unsuccessful");
+                                Log.v("TAG",error.toString());
+
+                            }
+                        }){
+
+                            @Override
+                            protected Map<String, String> getParams() throws AuthFailureError {
+
+                                String baselineId = attach.getBaselineId();
+                                String photoPath = attach.getPhotoPath();
+                                String videoPath = attach.getVideoPath();
+                                String photoStatus = attach.getPhotoStatus();
+                                String videoStatus = attach.getVideoStatus();
+                                String mimeType = attach.getMimeType();
+                                Map<String,String> details = new HashMap<>();
+                                details.put("baseline_id",baselineId);
+                                details.put("photo_path",photoPath);
+                                details.put("video_path",videoPath);
+                                details.put("photo_status",photoStatus);
+                                details.put("video_status",videoStatus);
+                                details.put("mime_type",mimeType);
+                                return details;
+                            }
+                        };
+
+                        MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
+                    }
+                }
+            }
+        }).start();
+    }
+
+
+    //For uploading data on given server of Baseline
+    private void uploadDataBaseline() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                List<BaselineModel> put = db.getAllBaseline();
+                if (put != null){
+
+                    for (final BaselineModel base : put){
+
+                        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_baseline, new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+
+                                Toast.makeText(MainActivity.this,"Response :"+response,Toast.LENGTH_LONG).show();
+                                Log.v("TAG","upload on xampp of baseline");
+                                Log.v("TAG",response);
+                                db.deleteBaseline(base);
+                                Log.v("TAG","Record deleted from Baseline");
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+
+                                Toast.makeText(MainActivity.this,"some error found .....",Toast.LENGTH_SHORT).show();
+                                error.printStackTrace();
+                                Log.v("TAG","upload on xampp unsuccessful");
+                                Log.v("TAG",error.toString());
+
+                            }
+                        }){
+
+                            @Override
+                            protected Map<String, String> getParams() throws AuthFailureError {
+
+                                String name = base.getName();
+                                String photoTitle = base.getPhotoTitle();
+                                String videoTitle = base.getVideoTitle();
+                                String message = base.getMessage();
+                                Map<String,String> details = new HashMap<>();
+                                details.put("name",name);
+                                details.put("photo_title",photoTitle);
+                                details.put("video_title",videoTitle);
+                                details.put("message",message);
+                                return details;
+                            }
+                        };
+
+                        MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
+                    }
+                }
+            }
+        }).start();
+    }
+
+    private void uploadBoth(final String photoPath, final String videoPath, final AttachmentModel attach) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -633,7 +777,7 @@ public class MainActivity extends AppCompatActivity {
                     uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
                     if (uploadImageStatus){
                         Log.v("TAG","Uploading image successful");
-                        disconnect();
+                       // disconnect();
                     }
                 } else {
                     Log.d("TAG", "Connection failed from image");
@@ -655,13 +799,19 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("TAG", "Connection failed from image");
                 }
 
+                if (uploadImageStatus && uploadvideoStatus){
+                    db.updateAttachmentPhotoVideoStatus(attach);
+                    uploadDataBaseline();
+                    uploadDataAttachment();
+                }
+
             }
         }).start();
     }
 
 
     //For uploading image on FTP Server
-    public Boolean uploadImage(final String photoPath){
+    public void uploadImage(final String photoPath, final AttachmentModel attach){
 
         new Thread(new Runnable() {
             public void run() {
@@ -674,7 +824,13 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("TAG", "Connection Success");
                     uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
                     if (uploadImageStatus){
+                        Log.v("TAG",uploadImageStatus.toString());
+                        mFlag = 1;
                         Log.v("TAG","Uploading image successful");
+                        db.updateAttachmentPhotoStatus(attach);
+                        uploadDataBaseline();
+                        uploadDataAttachment();
+                        Log.v("TAG","UploadDataBaseline called");
                         disconnect();
                     }
                 } else {
@@ -682,12 +838,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }).start();
-        return uploadImageStatus;
+
     }
 
 
     //For uploading video on FTP server
-    public Boolean uploadVideo(final String videoPath){
+    public void uploadVideo(final String videoPath, final AttachmentModel attach){
 
         new Thread(new Runnable() {
             public void run() {
@@ -701,6 +857,10 @@ public class MainActivity extends AppCompatActivity {
                     uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/Videos_" + uploadTimeStamp + ".mp4","soochana",getApplicationContext());
                     if (uploadvideoStatus){
                         Log.v("TAG","Uploading video successful");
+                        db.updateAttachmentVideoStatus(attach);
+                        uploadDataBaseline();
+                        uploadDataAttachment();
+                        Log.v("TAG","UploadDataBaseline called");
                         disconnect();
                     }
                 } else {
@@ -708,7 +868,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }).start();
-        return uploadvideoStatus;
 
     }
 
