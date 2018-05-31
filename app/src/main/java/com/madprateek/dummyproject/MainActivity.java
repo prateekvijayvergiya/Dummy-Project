@@ -105,7 +105,9 @@ public class MainActivity extends AppCompatActivity {
         uploadTimeStamp = timeStamp;
 
 
-        //uploadData();
+        uploadData();
+        Log.v("TAG","from on create upload called");
+
 
         //For selecting content of Spinner
        mNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -614,7 +616,6 @@ public class MainActivity extends AppCompatActivity {
                                 //imageStatus = uploadImage(attach.getPhotoPath());
                                 //videoStatus = uploadVideo(attach.getVideoPath());
                                 uploadBoth(attach.getPhotoPath(),attach.getVideoPath(),attach);
-                                db.updateAttachmentPhotoVideoStatus(attach);
                             }else if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())){
 
                                  uploadImage(attach.getPhotoPath(),attach);
@@ -788,7 +789,7 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status2 = ftpclient.ftpConnect(host, username, password, 21);
-                if (status) {
+                if (status2) {
                     Log.d("TAG", "Connection Success");
                     uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/Videos_" + uploadTimeStamp + ".mp4","soochana",getApplicationContext());
                     if (uploadvideoStatus){
