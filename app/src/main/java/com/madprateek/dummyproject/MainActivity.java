@@ -606,10 +606,12 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
 
-                    List<AttachmentModel> put = db.getAllAttachments();
-                    if (put != null){
+                    List<AttachmentModel> putAttach = db.getAllAttachments();
+                    List<BaselineModel> putBase = db.getAllBaseline();
 
-                        for (AttachmentModel attach : put){
+                    if (putAttach != null){
+
+                        for (AttachmentModel attach : putAttach){
 
                             if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath())){
 
