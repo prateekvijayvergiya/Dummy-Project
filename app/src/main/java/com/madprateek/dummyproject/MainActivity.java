@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private File image,video;
     String mPhotoPath,mVideoPath;
     private DatabaseHelper db;
-    String baseId;
+    String baseId,tempStatus = "0";
     int mFlag = 0;
     //File image;
     Boolean imageStatus,videoStatus,uploadvideoStatus,uploadImageStatus;
@@ -105,8 +105,7 @@ public class MainActivity extends AppCompatActivity {
         uploadTimeStamp = timeStamp;
 
 
-        uploadData();
-        Log.v("TAG","from on create upload called");
+       finalUpload();
 
 
         //For selecting content of Spinner
@@ -268,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
                 }else mVideoPath = "";
 
                 storeBaseline(name,photoTitleText,videoTitleText,messageText);
-                storeAttachment(baseId,"0","0",mPhotoPath,mVideoPath,mMimeType);
+                storeAttachment(baseId,tempStatus,"0",mPhotoPath,mVideoPath,mMimeType);
                 //showDataBasseline();
                 //showDataAttachment();
 
@@ -278,6 +277,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void finalUpload() {
+
+        List<AttachmentModel> put = db.getAllAttachments();
+        for (int i = put.size() ; i >= 0 ; i-- ){
+            Log.v("TAG","Loop called : " + i);
+            uploadData();
+            Log.v("TAG","from on create upload called");
+        }
     }
 
     private void storeAttachment(String id, String s, String s1, String mPhotoPath, String mVideoPath, String mMimeType) {
@@ -610,8 +619,12 @@ public class MainActivity extends AppCompatActivity {
                     List<BaselineModel> putBase = db.getAllBaseline();
 
                     if (putAttach != null){
-
-                        for (AttachmentModel attach : putAttach){
+                        AttachmentModel attach;
+                        BaselineModel base;
+                        for (int i = 0; i < putAttach.size() ;i++){
+                            attach = putAttach.get(i);
+                            base = putBase.get(i);
+                            Log.v("TAG","value of base is" + base.toString());
 
                             if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath())){
 
@@ -620,7 +633,7 @@ public class MainActivity extends AppCompatActivity {
                                 uploadBoth(attach.getPhotoPath(),attach.getVideoPath(),attach);
                             }else if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())){
 
-                                 uploadImage(attach.getPhotoPath(),attach);
+                                 uploadImage(attach.getPhotoPath(),attach,base);
                                 //db.deleteAttachment(attach);
                                /* if (flag == 1){
                                     db.updateAttachmentPhotoStatus(attach);
@@ -647,16 +660,15 @@ public class MainActivity extends AppCompatActivity {
 
 
     //For uploading data on given server of attachments
-    private void uploadDataAttachment() {
+    private void uploadDataAttachment(final AttachmentModel attach) {
 
         new Thread(new Runnable() {
             @Override
             public void run() {
 
-                List<AttachmentModel> put = db.getAllAttachments();
-                if (put != null){
+                //if (put != null){
 
-                    for (final AttachmentModel attach : put){
+                    //for (final AttachmentModel attach : put){
 
                         StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
                             @Override
@@ -701,24 +713,24 @@ public class MainActivity extends AppCompatActivity {
                         };
 
                         MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
-                    }
-                }
+                    //}
+                //}
             }
         }).start();
     }
 
 
     //For uploading data on given server of Baseline
-    private void uploadDataBaseline() {
+    private void uploadDataBaseline(final BaselineModel base) {
 
         new Thread(new Runnable() {
             @Override
             public void run() {
 
-                List<BaselineModel> put = db.getAllBaseline();
-                if (put != null){
+               // List<BaselineModel> put = db.getAllBaseline();
+                //if (put != null){
 
-                    for (final BaselineModel base : put){
+                   // for (final BaselineModel base : put){
 
                         StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_baseline, new Response.Listener<String>() {
                             @Override
@@ -759,8 +771,8 @@ public class MainActivity extends AppCompatActivity {
                         };
 
                         MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
-                    }
-                }
+                    //}
+               // }
             }
         }).start();
     }
@@ -804,8 +816,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (uploadImageStatus && uploadvideoStatus){
                     db.updateAttachmentPhotoVideoStatus(attach);
-                    uploadDataBaseline();
-                    uploadDataAttachment();
+                    //uploadDataBaseline();
+                    //uploadDataAttachment();
                 }
 
             }
@@ -814,7 +826,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     //For uploading image on FTP Server
-    public void uploadImage(final String photoPath, final AttachmentModel attach){
+    public void uploadImage(final String photoPath, final AttachmentModel attach, final BaselineModel base){
 
         new Thread(new Runnable() {
             public void run() {
@@ -831,8 +843,13 @@ public class MainActivity extends AppCompatActivity {
                         mFlag = 1;
                         Log.v("TAG","Uploading image successful");
                         db.updateAttachmentPhotoStatus(attach);
-                        uploadDataBaseline();
-                        uploadDataAttachment();
+                        Log.v("TAG","get id of attachment :  " + attach.getId2() + "   " + attach.getBaselineId() );
+                        Log.v("TAG","Status updated : " + attach.getPhotoStatus());
+
+                        tempStatus = "1";
+                        attach.setPhotoStatus(tempStatus);
+                        uploadDataBaseline(base);
+                        uploadDataAttachment(attach);
                         Log.v("TAG","UploadDataBaseline called");
                         disconnect();
                     }
@@ -861,8 +878,8 @@ public class MainActivity extends AppCompatActivity {
                     if (uploadvideoStatus){
                         Log.v("TAG","Uploading video successful");
                         db.updateAttachmentVideoStatus(attach);
-                        uploadDataBaseline();
-                        uploadDataAttachment();
+                        //uploadDataBaseline();
+                        //uploadDataAttachment();
                         Log.v("TAG","UploadDataBaseline called");
                         disconnect();
                     }
@@ -884,4 +901,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
     }
+
 }
