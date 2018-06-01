@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private File image,video;
     String mPhotoPath,mVideoPath;
     private DatabaseHelper db;
-    String baseId,tempStatus = "0";
+    String baseId,tempPhotoStatus = "0",tempVideoStatus = "0";
     int mFlag = 0;
     //File image;
     Boolean imageStatus,videoStatus,uploadvideoStatus,uploadImageStatus;
@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
                 }else mVideoPath = "";
 
                 storeBaseline(name,photoTitleText,videoTitleText,messageText);
-                storeAttachment(baseId,tempStatus,"0",mPhotoPath,mVideoPath,mMimeType);
+                storeAttachment(baseId,tempPhotoStatus,tempVideoStatus,mPhotoPath,mVideoPath,mMimeType);
                 //showDataBasseline();
                 //showDataAttachment();
 
@@ -630,7 +630,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 //imageStatus = uploadImage(attach.getPhotoPath());
                                 //videoStatus = uploadVideo(attach.getVideoPath());
-                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath(),attach);
+                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath(),attach,base);
                             }else if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())){
 
                                  uploadImage(attach.getPhotoPath(),attach,base);
@@ -644,7 +644,7 @@ public class MainActivity extends AppCompatActivity {
 
                             }else if (!TextUtils.isEmpty(attach.getVideoPath())  && TextUtils.isEmpty(attach.getPhotoPath())){
 
-                                uploadVideo(attach.getVideoPath(),attach);
+                                uploadVideo(attach.getVideoPath(),attach,base);
                             }
 
                         }
@@ -777,7 +777,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void uploadBoth(final String photoPath, final String videoPath, final AttachmentModel attach) {
+    private void uploadBoth(final String photoPath, final String videoPath, final AttachmentModel attach, final BaselineModel base) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -816,8 +816,12 @@ public class MainActivity extends AppCompatActivity {
 
                 if (uploadImageStatus && uploadvideoStatus){
                     db.updateAttachmentPhotoVideoStatus(attach);
-                    //uploadDataBaseline();
-                    //uploadDataAttachment();
+                    tempPhotoStatus = "1";
+                    tempVideoStatus = "1";
+                    attach.setPhotoStatus(tempPhotoStatus);
+                    attach.setVideoStatus(tempVideoStatus);
+                    uploadDataBaseline(base);
+                    uploadDataAttachment(attach);
                 }
 
             }
@@ -846,8 +850,8 @@ public class MainActivity extends AppCompatActivity {
                         Log.v("TAG","get id of attachment :  " + attach.getId2() + "   " + attach.getBaselineId() );
                         Log.v("TAG","Status updated : " + attach.getPhotoStatus());
 
-                        tempStatus = "1";
-                        attach.setPhotoStatus(tempStatus);
+                        tempPhotoStatus = "1";
+                        attach.setPhotoStatus(tempPhotoStatus);
                         uploadDataBaseline(base);
                         uploadDataAttachment(attach);
                         Log.v("TAG","UploadDataBaseline called");
@@ -863,7 +867,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     //For uploading video on FTP server
-    public void uploadVideo(final String videoPath, final AttachmentModel attach){
+    public void uploadVideo(final String videoPath, final AttachmentModel attach, final BaselineModel base){
 
         new Thread(new Runnable() {
             public void run() {
@@ -878,8 +882,10 @@ public class MainActivity extends AppCompatActivity {
                     if (uploadvideoStatus){
                         Log.v("TAG","Uploading video successful");
                         db.updateAttachmentVideoStatus(attach);
-                        //uploadDataBaseline();
-                        //uploadDataAttachment();
+                        tempVideoStatus = "1";
+                        attach.setVideoStatus(tempVideoStatus);
+                        uploadDataBaseline(base);
+                        uploadDataAttachment(attach);
                         Log.v("TAG","UploadDataBaseline called");
                         disconnect();
                     }
