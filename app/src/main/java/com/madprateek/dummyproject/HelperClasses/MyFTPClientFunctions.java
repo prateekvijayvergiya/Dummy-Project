@@ -20,8 +20,10 @@ public class MyFTPClientFunctions extends MainActivity {
             mFTPClient = new FTPClient();
             // connecting to the host
             mFTPClient.connect(host, port);
+            Log.v("TAG","Server Reply : " + mFTPClient.getReplyCode());
             // now check the reply code, if positive mean connection success
             if (FTPReply.isPositiveCompletion(mFTPClient.getReplyCode())) {
+
                 // login using username & password
                 boolean status = mFTPClient.login(username, password);
                 /*

@@ -166,11 +166,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void updateAttachmentPhotoStatus(AttachmentModel attach){
         db = this.getWritableDatabase();
-        Log.v("TAG","update method called");
         ContentValues values = new ContentValues();
         values.put(KEY_PHOTO_STATUS,"1");
         db.update(ATTACHMENTS, values, KEY_ID_2 + " = ?",new String[]{String.valueOf(attach.getId2())});
-        Log.v("TAG","After updation photo status is : " + attach.getPhotoStatus());
         db.close();
 
     }

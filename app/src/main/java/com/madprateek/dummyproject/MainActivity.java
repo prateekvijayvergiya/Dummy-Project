@@ -105,7 +105,8 @@ public class MainActivity extends AppCompatActivity {
         uploadTimeStamp = timeStamp;
 
 
-       finalUpload();
+       //finalUpload();
+        uploadData();
 
 
         //For selecting content of Spinner
@@ -616,6 +617,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
 
                     List<AttachmentModel> putAttach = db.getAllAttachments();
+                    Log.v("TAG","display putAttach  " + putAttach.size());
                     List<BaselineModel> putBase = db.getAllBaseline();
 
                     if (putAttach != null){
@@ -630,8 +632,9 @@ public class MainActivity extends AppCompatActivity {
 
                                 //imageStatus = uploadImage(attach.getPhotoPath());
                                 //videoStatus = uploadVideo(attach.getVideoPath());
-                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath(),attach,base);
-                            }else if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())){
+                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath(), attach, base);
+                            }
+                            if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())){
 
                                  uploadImage(attach.getPhotoPath(),attach,base);
                                 //db.deleteAttachment(attach);
@@ -642,7 +645,8 @@ public class MainActivity extends AppCompatActivity {
                                     //uploadDataAttachment();
                                 }*/
 
-                            }else if (!TextUtils.isEmpty(attach.getVideoPath())  && TextUtils.isEmpty(attach.getPhotoPath())){
+                            }
+                            if (!TextUtils.isEmpty(attach.getVideoPath())  && TextUtils.isEmpty(attach.getPhotoPath())){
 
                                 uploadVideo(attach.getVideoPath(),attach,base);
                             }
@@ -839,6 +843,12 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status = ftpclient.ftpConnect(host, username, password, 21);
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Log.v("TAg","Value of status is  " + status);
                 if (status) {
                     Log.d("TAG", "Connection Success");
                     uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
@@ -847,11 +857,10 @@ public class MainActivity extends AppCompatActivity {
                         mFlag = 1;
                         Log.v("TAG","Uploading image successful");
                         db.updateAttachmentPhotoStatus(attach);
-                        Log.v("TAG","get id of attachment :  " + attach.getId2() + "   " + attach.getBaselineId() );
-                        Log.v("TAG","Status updated : " + attach.getPhotoStatus());
 
                         tempPhotoStatus = "1";
                         attach.setPhotoStatus(tempPhotoStatus);
+                        Log.v("TAG","Status updated : " + attach.getPhotoStatus());
                         uploadDataBaseline(base);
                         uploadDataAttachment(attach);
                         Log.v("TAG","UploadDataBaseline called");
