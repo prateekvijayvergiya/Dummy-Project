@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("Soochana");
 
+
         mNameSpinner = (Spinner) findViewById(R.id.nameSpiner);
         mNameSpinner = initSpinner(mNameSpinner, R.array.nameArray);
         mPhotoTitleText = (EditText) findViewById(R.id.photoTitle);
