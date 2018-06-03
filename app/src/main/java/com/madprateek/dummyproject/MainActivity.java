@@ -1,6 +1,9 @@
 package com.madprateek.dummyproject;
 
 import android.Manifest;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -62,13 +65,13 @@ public class MainActivity extends AppCompatActivity {
     private int REQUEST_VIDEO_PICK = 20;
     private int REQUEST_IMAGE_CAPTURE = 15;
     private int REQUEST_VIDEO_CAPTURE = 25;
-
+    private int jobID=1;
     private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
     private MyFTPClientFunctions ftpclient = null;
-    String server_url_baseline = "http://192.168.12.160/Baseline.php";
-    String server_url_attachments = "http://192.168.12.160/attachments.php";
+    String server_url_baseline = "http://192.168.0.104/Baseline.php";
+    String server_url_attachments = "http://192.168.0.104/attachments.php";
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
@@ -107,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         uploadTimeStamp = timeStamp;
 
-
+      //  startService(new Intent(getApplicationContext(),MyService.class));
        //finalUpload();
         uploadData();
 
@@ -660,7 +663,10 @@ public class MainActivity extends AppCompatActivity {
             }).start();
         }
         else {
-
+            JobInfo jobInfo = new JobInfo.Builder(jobID++,new ComponentName(this,MyJobService.class))
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
+            JobScheduler jobScheduler=(JobScheduler)getSystemService(JOB_SCHEDULER_SERVICE);
+            jobScheduler.schedule(jobInfo);
             Toast.makeText(this, "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
         }
     }

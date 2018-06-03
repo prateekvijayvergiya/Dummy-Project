@@ -1,9 +1,7 @@
 package com.madprateek.dummyproject;
 
-import android.app.Service;
-import android.content.Intent;
-import android.icu.util.Calendar;
-import android.os.IBinder;
+import android.app.job.JobParameters;
+import android.app.job.JobService;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -25,47 +23,45 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MyService extends Service {
+public class MyJobService extends JobService {
     DatabaseHelper db;
     private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
     private MyFTPClientFunctions ftpclient = null;
-    private String mCurrentPhotoPath,mCurrentVideoPath,uploadTimeStamp,spinnerContent,mMimeType;
     Boolean uploadvideoStatus,uploadImageStatus;
-    String baseId,tempPhotoStatus = "0",tempVideoStatus = "0";
+    String tempPhotoStatus = "0",tempVideoStatus = "0",uploadTimeStamp;
     int mFlag = 0;
     String server_url_baseline = "http://192.168.0.104/Baseline.php";
     String server_url_attachments = "http://192.168.0.104/attachments.php";
 
-
-    public MyService() {
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
+    public MyJobService() {
+        super();
         db = new DatabaseHelper(this);
         ftpclient = new MyFTPClientFunctions();
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         uploadTimeStamp = timeStamp;
+    }
+
+    @Override
+    public boolean onStartJob(JobParameters jobParameters) {
+        if(Connection.isConnectingToInternet(getApplicationContext())){
+            Log.d("service status :","device online");
+            uploadData();
+            jobFinished(jobParameters,false);
+            return false;
+        }else{
+            Log.d("service status :","device online");
+            return true;
+        }
 
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
-        Log.d("service status :","started");
-        if(Connection.isConnectingToInternet(getApplicationContext())){
-            Log.d("service status :","device online");
-            uploadData();
-            stopSelf(startId);
-        }else{
-            Log.d("service status :","device online");
-        }
-        return START_REDELIVER_INTENT;
+    public boolean onStopJob(JobParameters jobParameters) {
+        return !(Connection.isConnectingToInternet(getApplicationContext()));
     }
+
 
     private void uploadData() {
         new Thread(new Runnable() {
@@ -105,6 +101,7 @@ public class MyService extends Service {
                         if (!TextUtils.isEmpty(attach.getVideoPath())  && TextUtils.isEmpty(attach.getPhotoPath())){
 
                             uploadVideo(attach.getVideoPath(),attach,base);
+
                         }
 
                     }
@@ -163,12 +160,6 @@ public class MyService extends Service {
             }
         }).start();
     }
-    @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
 
     //For uploading image on FTP Server
     public void uploadImage(final String photoPath, final AttachmentModel attach, final BaselineModel base){
@@ -369,10 +360,4 @@ public class MyService extends Service {
             }
         }).start();
     }
-
-
-
-
-
-
 }
