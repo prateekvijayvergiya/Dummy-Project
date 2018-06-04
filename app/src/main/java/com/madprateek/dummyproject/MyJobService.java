@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class MyJobService extends JobService {
     DatabaseHelper db;
@@ -31,9 +32,11 @@ public class MyJobService extends JobService {
     private MyFTPClientFunctions ftpclient = null;
     Boolean uploadvideoStatus,uploadImageStatus;
     String tempPhotoStatus = "0",tempVideoStatus = "0",uploadTimeStamp;
-    int mFlag = 0;
-    String server_url_baseline = "http://192.168.0.104/Baseline.php";
-    String server_url_attachments = "http://192.168.0.104/attachments.php";
+    int mFlag = 0, rand = 0;
+    static  int count =0;
+    Random random;
+    String server_url_baseline = "http://192.168.12.160/Baseline.php";
+    String server_url_attachments = "http://192.168.12.160/attachments.php";
 
     public MyJobService() {
         super();
@@ -69,6 +72,7 @@ public class MyJobService extends JobService {
             public void run() {
 
                 List<AttachmentModel> putAttach = db.getAllAttachments();
+                count = putAttach.size();
                 Log.v("TAG","display putAttach  " + putAttach.size());
                 List<BaselineModel> putBase = db.getAllBaseline();
 
@@ -171,15 +175,12 @@ public class MyJobService extends JobService {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status = ftpclient.ftpConnect(host, username, password, 21);
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 Log.v("TAg","Value of status is  " + status);
                 if (status) {
                     Log.d("TAG", "Connection Success");
-                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
+                    random = new Random();
+                    rand = random.nextInt(1000);
+                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + "_" + rand + ".jpg","soochana",getApplicationContext());
                     if (uploadImageStatus){
                         Log.v("TAG",uploadImageStatus.toString());
                         mFlag = 1;
@@ -192,13 +193,15 @@ public class MyJobService extends JobService {
                         uploadDataBaseline(base);
                         uploadDataAttachment(attach);
                         Log.v("TAG","UploadDataBaseline called");
-                        disconnect();
+                        //disconnect();
                     }
                 } else {
                     Log.d("TAG", "Connection failed from image");
                 }
             }
         }).start();
+
+
 
     }
 
@@ -309,6 +312,7 @@ public class MyJobService extends JobService {
                         Log.v("TAG","upload on xampp of attachment");
                         Log.v("TAG",response);
                         db.deleteAttachment(attach);
+                        count --;
                         Log.v("TAG","Record deleted from attachment");
                     }
                 }, new Response.ErrorListener() {
@@ -348,6 +352,9 @@ public class MyJobService extends JobService {
                 //}
             }
         }).start();
+
+        if (count != 1)
+            uploadData();
     }
 
 

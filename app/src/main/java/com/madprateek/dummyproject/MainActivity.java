@@ -51,6 +51,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -70,18 +71,21 @@ public class MainActivity extends AppCompatActivity {
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
     private MyFTPClientFunctions ftpclient = null;
-    String server_url_baseline = "http://192.168.0.104/Baseline.php";
-    String server_url_attachments = "http://192.168.0.104/attachments.php";
+    String server_url_baseline = "http://192.168.12.160/Baseline.php";
+    String server_url_attachments = "http://192.168.12.160/attachments.php";
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
     private EditText mPhotoTitleText,mVideoTitleText,mMessageText;
     private String mCurrentPhotoPath,mCurrentVideoPath,uploadTimeStamp,spinnerContent,mMimeType;
     private File image,video;
-    String mPhotoPath,mVideoPath;
+    String mPhotoPath, mVideoPath;
+    String dbPhotoPath = " ", dbVideoPath = " ";
     private DatabaseHelper db;
     String baseId,tempPhotoStatus = "0",tempVideoStatus = "0";
-    int mFlag = 0;
+    int mFlag = 0,rand = 0;
+    static int count = 0;
+    Random random;
     //File image;
     Boolean imageStatus,videoStatus,uploadvideoStatus,uploadImageStatus;
     @Override
@@ -105,14 +109,11 @@ public class MainActivity extends AppCompatActivity {
         db = new DatabaseHelper(this);
         ftpclient = new MyFTPClientFunctions();
 
-
         //For getting the TimeStamp
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         uploadTimeStamp = timeStamp;
 
-      //  startService(new Intent(getApplicationContext(),MyService.class));
-       //finalUpload();
-        uploadData();
+       // uploadData();
 
 
         //For selecting content of Spinner
@@ -286,18 +287,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void finalUpload() {
-
-        List<AttachmentModel> put = db.getAllAttachments();
-        for (int i = put.size() ; i >= 0 ; i-- ){
-            Log.v("TAG","Loop called : " + i);
-            uploadData();
-            Log.v("TAG","from on create upload called");
-        }
-    }
-
-    private void storeAttachment(String id, String s, String s1, String mPhotoPath, String mVideoPath, String mMimeType) {
-        AttachmentModel attach = new AttachmentModel(id,s,s1,mPhotoPath,mVideoPath,mMimeType);
+    private void storeAttachment(String id, String s, String s1, String dbPhotoPath, String dbVideoPath, String mMimeType) {
+        AttachmentModel attach = new AttachmentModel(id,s,s1,dbPhotoPath,dbVideoPath,mMimeType);
         db.addAttachment(attach);
         Log.v("TAG - attachment","Data inserted row created in attachment");
     }
@@ -623,6 +614,8 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
 
                     List<AttachmentModel> putAttach = db.getAllAttachments();
+                    count = putAttach.size();
+                    Log.v("TAG","Value of count is : " + count);
                     Log.v("TAG","display putAttach  " + putAttach.size());
                     List<BaselineModel> putBase = db.getAllBaseline();
 
@@ -675,22 +668,22 @@ public class MainActivity extends AppCompatActivity {
     //For uploading data on given server of attachments
     private void uploadDataAttachment(final AttachmentModel attach) {
 
+        Log.v("TAG","Upload Data Attachment Called");
         new Thread(new Runnable() {
             @Override
             public void run() {
-
-                //if (put != null){
-
-                    //for (final AttachmentModel attach : put){
 
                         StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
 
-                                Toast.makeText(MainActivity.this,"Response :"+response,Toast.LENGTH_LONG).show();
+                                Toast.makeText(MainActivity.this,"Response :" +response,Toast.LENGTH_SHORT).show();
                                 Log.v("TAG","upload on xampp of attachment");
                                 Log.v("TAG",response);
                                 db.deleteAttachment(attach);
+                                Log.v("TAG","Data uploaded of :" + count);
+                                count --;
+                                Log.v("TAG","Value of count is :" + count);
                                 Log.v("TAG","Record deleted from attachment");
                             }
                         }, new Response.ErrorListener() {
@@ -726,10 +719,16 @@ public class MainActivity extends AppCompatActivity {
                         };
 
                         MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
+
                     //}
                 //}
+
             }
         }).start();
+
+        if (count != 1)
+            uploadData();
+
     }
 
 
@@ -802,7 +801,8 @@ public class MainActivity extends AppCompatActivity {
                 status = ftpclient.ftpConnect(host, username, password, 21);
                 if (status) {
                     Log.d("TAG", "Connection Success");
-                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
+                    dbPhotoPath = "Images_" + uploadTimeStamp + "_" + rand + ".jpg";
+                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/" + dbPhotoPath, "soochana",getApplicationContext());
                     if (uploadImageStatus){
                         Log.v("TAG","Uploading image successful");
                        // disconnect();
@@ -816,9 +816,12 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status2 = ftpclient.ftpConnect(host, username, password, 21);
+                random = new Random();
+                rand = random.nextInt(1000);
                 if (status2) {
                     Log.d("TAG", "Connection Success");
-                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/Videos_" + uploadTimeStamp + ".mp4","soochana",getApplicationContext());
+                    dbVideoPath = "Videos_" + uploadTimeStamp + "_" + rand + ".jpg";
+                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/" + dbVideoPath, "soochana",getApplicationContext());
                     if (uploadvideoStatus){
                         Log.v("TAG","Uploading video successful");
                         disconnect();
@@ -833,6 +836,8 @@ public class MainActivity extends AppCompatActivity {
                     tempVideoStatus = "1";
                     attach.setPhotoStatus(tempPhotoStatus);
                     attach.setVideoStatus(tempVideoStatus);
+                    db.updatePhotoPath(dbPhotoPath,attach);
+                    db.updateVideoPath(dbVideoPath,attach);
                     uploadDataBaseline(base);
                     uploadDataAttachment(attach);
                 }
@@ -852,15 +857,18 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status = ftpclient.ftpConnect(host, username, password, 21);
-                try {
+               /* try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }
+                }*/
+                random = new Random();
+                rand = random.nextInt(1000);
                 Log.v("TAg","Value of status is  " + status);
                 if (status) {
                     Log.d("TAG", "Connection Success");
-                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/Images_" + uploadTimeStamp + ".jpg","soochana",getApplicationContext());
+                    dbPhotoPath = "Images_" + uploadTimeStamp + "_" + rand + ".jpg";
+                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/" + dbPhotoPath,"soochana",getApplicationContext());
                     if (uploadImageStatus){
                         Log.v("TAG",uploadImageStatus.toString());
                         mFlag = 1;
@@ -870,10 +878,14 @@ public class MainActivity extends AppCompatActivity {
                         tempPhotoStatus = "1";
                         attach.setPhotoStatus(tempPhotoStatus);
                         Log.v("TAG","Status updated : " + attach.getPhotoStatus());
+                        db.updatePhotoPath(dbPhotoPath,attach);
+                        //attach.setPhotoPath(dbPhotoPath);
+                        Log.v("TAG","Photo path updated :" + attach.getPhotoPath());
+
                         uploadDataBaseline(base);
-                        uploadDataAttachment(attach);
                         Log.v("TAG","UploadDataBaseline called");
-                        disconnect();
+                        uploadDataAttachment(attach);
+                        //disconnect();
                     }
                 } else {
                     Log.d("TAG", "Connection failed from image");
@@ -894,14 +906,18 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status = ftpclient.ftpConnect(host, username, password, 21);
+                random = new Random();
+                rand = random.nextInt(1000);
                 if (status) {
                     Log.d("TAG", "Connection Success");
-                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/Videos_" + uploadTimeStamp + ".mp4","soochana",getApplicationContext());
+                    dbVideoPath = "Videos_" + uploadTimeStamp + "_" + rand + ".jpg";
+                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/" + dbVideoPath,"soochana",getApplicationContext());
                     if (uploadvideoStatus){
                         Log.v("TAG","Uploading video successful");
                         db.updateAttachmentVideoStatus(attach);
                         tempVideoStatus = "1";
                         attach.setVideoStatus(tempVideoStatus);
+                        db.updateVideoPath(dbVideoPath,attach);
                         uploadDataBaseline(base);
                         uploadDataAttachment(attach);
                         Log.v("TAG","UploadDataBaseline called");

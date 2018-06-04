@@ -191,4 +191,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
 
     }
+
+    public void updatePhotoPath(String dbPhotoPath,AttachmentModel attach){
+        db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_PHOTO_PATH, dbPhotoPath);
+        db.update(ATTACHMENTS, values, KEY_ID_2 + " = ?", new String[]{String.valueOf(attach.getId2())});
+        attach.setPhotoPath(dbPhotoPath);
+        Log.v("TAG","value of photoPath in DB : " + attach.getPhotoPath());
+        db.close();
+    }
+
+    public void updateVideoPath(String dbVideoPath, AttachmentModel attach){
+        db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_VIDEO_PATH, dbVideoPath);
+        db.update(ATTACHMENTS, values, KEY_ID_2 + " = ?", new String[]{String.valueOf(attach.getId2())});
+        attach.setVideoPath(dbVideoPath);
+        db.close();
+    }
 }
