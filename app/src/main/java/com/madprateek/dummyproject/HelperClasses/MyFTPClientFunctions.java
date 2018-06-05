@@ -11,9 +11,10 @@ import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.FileInputStream;
 
-public class MyFTPClientFunctions extends MainActivity {
+public class MyFTPClientFunctions  {
 
     public FTPClient mFTPClient = null;
+
 
     public boolean ftpConnect(String host, String username, String password, int port) {
         try {

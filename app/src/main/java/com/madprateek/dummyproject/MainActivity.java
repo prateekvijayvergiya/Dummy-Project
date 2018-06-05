@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -47,17 +48,18 @@ import com.madprateek.dummyproject.ModelClasses.BaselineModel;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
+    String TAG = MainActivity.class.getSimpleName();
     private Spinner mNameSpinner;
     private Toolbar mToolbar;
-    private Button mPhotoBtn,mVideoBtn,mSubmitBtn;
+    private Button mPhotoBtn, mVideoBtn, mSubmitBtn;
     private int REQUEST_CAMERA = 100;
     private int REQUEST_STORAGE = 200;
     private static Boolean REQUEST_STATUS = false;
@@ -66,28 +68,26 @@ public class MainActivity extends AppCompatActivity {
     private int REQUEST_VIDEO_PICK = 20;
     private int REQUEST_IMAGE_CAPTURE = 15;
     private int REQUEST_VIDEO_CAPTURE = 25;
-    private int jobID=1;
+    private int jobID = 1;
     private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
     private MyFTPClientFunctions ftpclient = null;
-    String server_url_baseline = "http://192.168.12.160/Baseline.php";
-    String server_url_attachments = "http://192.168.12.160/attachments.php";
+    String server_url_baseline = "http://192.168.0.104/Baseline.php";
+    String server_url_attachments = "http://192.168.0.104/attachments.php";
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
-    private EditText mPhotoTitleText,mVideoTitleText,mMessageText;
-    private String mCurrentPhotoPath,mCurrentVideoPath,uploadTimeStamp,spinnerContent,mMimeType;
-    private File image,video;
+    private EditText mPhotoTitleText, mVideoTitleText, mMessageText;
+    private String mCurrentPhotoPath, mCurrentVideoPath, uploadTimeStamp, spinnerContent, mMimeType;
+    private File image, video;
     String mPhotoPath, mVideoPath;
-    String dbPhotoPath = " ", dbVideoPath = " ";
     private DatabaseHelper db;
-    String baseId,tempPhotoStatus = "0",tempVideoStatus = "0";
-    int mFlag = 0,rand = 0;
-    static int count = 0;
-    Random random;
+    String baseId, tempPhotoStatus = "0", tempVideoStatus = "0";
+    int mFlag = 0;
     //File image;
-    Boolean imageStatus,videoStatus,uploadvideoStatus,uploadImageStatus;
+    Boolean imageStatus, videoStatus, uploadvideoStatus, uploadImageStatus;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,27 +109,29 @@ public class MainActivity extends AppCompatActivity {
         db = new DatabaseHelper(this);
         ftpclient = new MyFTPClientFunctions();
 
+
         //For getting the TimeStamp
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         uploadTimeStamp = timeStamp;
 
-       // uploadData();
+        //  startService(new Intent(getApplicationContext(),MyService.class));
+        //finalUpload();
+//        uploadData();
 
 
         //For selecting content of Spinner
-       mNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-           @Override
-           public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-               spinnerContent = parent.getItemAtPosition(position).toString();
-           }
+        mNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                spinnerContent = parent.getItemAtPosition(position).toString();
+            }
 
-           @Override
-           public void onNothingSelected(AdapterView<?> parent) {
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
 
-               spinnerContent = parent.getSelectedItem().toString();
-           }
-       });
-
+                spinnerContent = parent.getSelectedItem().toString();
+            }
+        });
 
 
         //for clicking of Photo button
@@ -138,32 +140,32 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 CAPTURE_CODE = "PHOTO";
-                CharSequence options[] = new CharSequence[]{"Choose from Gallery (गैलरी से चयन करो)","Camera (कैमरा)"};
+                CharSequence options[] = new CharSequence[]{"Choose from Gallery (गैलरी से चयन करो)", "Camera (कैमरा)"};
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("Select Option (विकल्प चुनें)");
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int position) {
 
-                        if (position == 0){
+                        if (position == 0) {
 
                             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                     != PackageManager.PERMISSION_GRANTED) {
                                 // Permission is not granted
                                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
-                            }else {
+                            } else {
 
                                 chooseImage();
                             }
 
-                        }else if (position == 1){
+                        } else if (position == 1) {
 
                             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
                                     != PackageManager.PERMISSION_GRANTED) {
                                 // Permission is not granted
                                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.CAMERA"}, REQUEST_CAMERA);
 
-                            }else{
+                            } else {
 
                                 capturePhoto();
                             }
@@ -183,42 +185,41 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 CAPTURE_CODE = "VIDEO";
-                CharSequence options[] = new CharSequence[]{"Choose from Gallery (गैलरी से चयन करो)","Camera (कैमरा)"};
+                CharSequence options[] = new CharSequence[]{"Choose from Gallery (गैलरी से चयन करो)", "Camera (कैमरा)"};
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("Select Option (विकल्प चुनें)");
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int position) {
 
-                        if (position == 0){
+                        if (position == 0) {
 
-                            if (!REQUEST_STATUS){
+                            if (!REQUEST_STATUS) {
                                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                         != PackageManager.PERMISSION_GRANTED) {
                                     // Permission is not granted
                                     ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
-                                }else {
+                                } else {
                                     chooseVideo();
                                 }
-                            }else {
+                            } else {
                                 chooseVideo();
                             }
 
 
-                        }else if (position == 1){
+                        } else if (position == 1) {
 
-                            if (!REQUEST_STATUS){
+                            if (!REQUEST_STATUS) {
                                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
                                         != PackageManager.PERMISSION_GRANTED) {
                                     // Permission is not granted
                                     ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.CAMERA"}, REQUEST_CAMERA);
 
-                                }else {
+                                } else {
                                     captureVideo();
                                 }
 
-                            }
-                            else {
+                            } else {
 
                                 captureVideo();
                             }
@@ -242,55 +243,109 @@ public class MainActivity extends AppCompatActivity {
                 String messageText = mMessageText.getText().toString();
 
                 //for getting the empty text
-                if (!TextUtils.isEmpty(photoTitleText)){
+                if (!TextUtils.isEmpty(photoTitleText)) {
                     photoTitleText = photoTitleText;
-                }else {
+                } else {
                     photoTitleText = "-";
                 }
-                if (!TextUtils.isEmpty(videoTitleText)){
+                if (!TextUtils.isEmpty(videoTitleText)) {
                     videoTitleText = videoTitleText;
-                }else {
+                } else {
                     videoTitleText = "-";
                 }
-                if (!TextUtils.isEmpty(messageText)){
+                if (!TextUtils.isEmpty(messageText)) {
                     messageText = messageText;
-                }else {
+                } else {
                     messageText = "-";
                 }
 
                 //for getting the mime type
-                if (!TextUtils.isEmpty(mPhotoPath) && !TextUtils.isEmpty(mVideoPath)){
+                if (!TextUtils.isEmpty(mPhotoPath) && !TextUtils.isEmpty(mVideoPath)) {
                     mMimeType = "JPEG/mp4";
-                }else if (!TextUtils.isEmpty(mPhotoPath)){
+                } else if (!TextUtils.isEmpty(mPhotoPath)) {
                     mMimeType = "JPEG";
-                }else mMimeType = "mp4";
+                } else mMimeType = "mp4";
 
 
                 //for setting video and photo path
-                if (!TextUtils.isEmpty(mPhotoPath)){
+                if (!TextUtils.isEmpty(mPhotoPath)) {
                     mPhotoPath = mPhotoPath;
-                }else mPhotoPath = "";
-                if (!TextUtils.isEmpty(mVideoPath)){
+                } else mPhotoPath = "";
+                if (!TextUtils.isEmpty(mVideoPath)) {
                     mVideoPath = mVideoPath;
-                }else mVideoPath = "";
+                } else mVideoPath = "";
 
-                storeBaseline(name,photoTitleText,videoTitleText,messageText);
-                storeAttachment(baseId,tempPhotoStatus,tempVideoStatus,mPhotoPath,mVideoPath,mMimeType);
+                storeBaseline(name, photoTitleText, videoTitleText, messageText);
+                storeAttachment(baseId, tempPhotoStatus, tempVideoStatus, mPhotoPath, mVideoPath, mMimeType);
                 //showDataBasseline();
                 //showDataAttachment();
 
-                uploadData();
-                Log.v("TAG","upload data called");
+//                uploadData();
+                Connection connection = new Connection();
+                if (connection.isConnectingToInternet(getApplicationContext())) {
+                    ArrayList<AttachmentModel> allAttachments = (ArrayList) db.getAllAttachments();
+                    ArrayList<BaselineModel> allBaselines = (ArrayList) db.getAllBaseline();
+                    new NetworkTask(allAttachments, allBaselines).execute();
+
+                } else {
+                    JobInfo jobInfo = new JobInfo.Builder(jobID++, new ComponentName(getApplicationContext(), MyJobService.class))
+                            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
+                    JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+                    jobScheduler.schedule(jobInfo);
+                    Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
+
+                }
+//                    Log.v("TAG","upload data called");
 
             }
         });
 
     }
 
-    private void storeAttachment(String id, String s, String s1, String dbPhotoPath, String dbVideoPath, String mMimeType) {
-        AttachmentModel attach = new AttachmentModel(id,s,s1,dbPhotoPath,dbVideoPath,mMimeType);
+    class NetworkTask extends AsyncTask<Void, Void, String> {
+        private ArrayList<AttachmentModel> attachmentModels;
+        private ArrayList<BaselineModel> baselineModels;
+
+        public NetworkTask(ArrayList<AttachmentModel> attachmentModels, ArrayList<BaselineModel> baselineModels) {
+            super();
+            this.attachmentModels = attachmentModels;
+            this.baselineModels = baselineModels;
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            NetworkRequestHandler nrh = new NetworkRequestHandler(getApplicationContext(), attachmentModels, baselineModels);
+            nrh.uploadAllData();
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            Log.d(TAG, "Starting Data Upload");
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            Log.d(TAG, "Data Upload Finished");
+        }
+    }
+
+  /*  private void finalUpload() {
+
+        List<AttachmentModel> put = db.getAllAttachments();
+        for (int i = put.size(); i >= 0; i--) {
+            Log.v("TAG", "Loop called : " + i);
+            uploadData();
+            Log.v("TAG", "from on create upload called");
+        }
+    }*/
+
+    private void storeAttachment(String id, String s, String s1, String mPhotoPath, String mVideoPath, String mMimeType) {
+        AttachmentModel attach = new AttachmentModel(id, s, s1, mPhotoPath, mVideoPath, mMimeType);
         db.addAttachment(attach);
-        Log.v("TAG - attachment","Data inserted row created in attachment");
+        Log.v("TAG - attachment", "Data inserted row created in attachment");
     }
 
     private void storeBaseline(String spinnerContent, String photoTitleText, String videoTitleText, String messageText) {
@@ -298,46 +353,45 @@ public class MainActivity extends AppCompatActivity {
         long Id = db.addBaseline(base);
         //baseId = Long.toString(Id);
         baseId = String.valueOf(Id);
-        Log.v("TAG - Baseline","Data inserted row created in Baseline");
+        Log.v("TAG - Baseline", "Data inserted row created in Baseline");
     }
 
     //For initialise Spinner
     public Spinner initSpinner(Spinner s, int content_array) {
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,content_array,R.layout.spinner_style);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, content_array, R.layout.spinner_style);
         adapter.setDropDownViewResource(R.layout.spinner_style);
         s.setAdapter(adapter);
         return s;
     }
 
 
-
     //For showing data of baseline on logs
-    private void showDataBasseline(){
+  /*  private void showDataBasseline() {
 
         List<BaselineModel> put = db.getAllBaseline();
-        for (BaselineModel base : put){
+        for (BaselineModel base : put) {
 
             String dId = base.getId();
             String name = base.getName();
             String dphoto = base.getPhotoTitle();
             String dVideo = base.getVideoTitle();
             String dmessage = base.getMessage();
-            HashMap<String,String> details = new HashMap<>();
-            details.put("id",dId);
-            details.put("\nname",name);
-            details.put("\nphoto",dphoto);
-            details.put("\nvideo",dVideo);
-            details.put("\nmessage",dmessage);
-            Log.v("Show Details",String.valueOf(details));
+            HashMap<String, String> details = new HashMap<>();
+            details.put("id", dId);
+            details.put("\nname", name);
+            details.put("\nphoto", dphoto);
+            details.put("\nvideo", dVideo);
+            details.put("\nmessage", dmessage);
+            Log.v("Show Details", String.valueOf(details));
         }
     }
 
     //For showing data of attachment on logs
-    private void showDataAttachment(){
+    private void showDataAttachment() {
 
         List<AttachmentModel> put = db.getAllAttachments();
-        for (AttachmentModel attach : put){
+        for (AttachmentModel attach : put) {
 
             String dId = attach.getId2();
             String fId = attach.getBaselineId();
@@ -346,35 +400,35 @@ public class MainActivity extends AppCompatActivity {
             String pStatus = attach.getPhotoStatus();
             String vStatus = attach.getVideoStatus();
             String type = attach.getMimeType();
-            HashMap<String,String> details = new HashMap<>();
-            details.put("dId",dId);
-            details.put("\nfId",fId);
-            details.put("\npPath",pPath);
-            details.put("\nvpath",vPath);
-            details.put("\npStatus",pStatus);
-            details.put("\nvStatus",vStatus);
-            details.put("\ntype",type);
-            Log.v("Show Details",String.valueOf(details));
+            HashMap<String, String> details = new HashMap<>();
+            details.put("dId", dId);
+            details.put("\nfId", fId);
+            details.put("\npPath", pPath);
+            details.put("\nvpath", vPath);
+            details.put("\npStatus", pStatus);
+            details.put("\nvStatus", vStatus);
+            details.put("\ntype", type);
+            Log.v("Show Details", String.valueOf(details));
         }
     }
-
+    */
 
     //Request runtime permission to users
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-        switch (requestCode){
+        switch (requestCode) {
 
             //Gallery
             case 200:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
 
                     REQUEST_STATUS = true;//for setting camera feature true for permission
-                    if (CAPTURE_CODE == "PHOTO"){
+                    if (CAPTURE_CODE == "PHOTO") {
                         chooseImage();
 
-                    }else {
+                    } else {
 
                         chooseVideo();
                     }
@@ -382,19 +436,19 @@ public class MainActivity extends AppCompatActivity {
                 break;
             //Camera
             case 100:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                     REQUEST_STATUS = true;//for setting camera feature true for permission
-                    if (CAPTURE_CODE == "PHOTO"){
+                    if (CAPTURE_CODE == "PHOTO") {
                         capturePhoto();
 
-                    }else {
+                    } else {
 
                         captureVideo();
                     }
                 }
 
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
 
                     Toast.makeText(this, "You will not be able to take pictures from Camera", Toast.LENGTH_LONG).show();
                 }
@@ -454,7 +508,7 @@ public class MainActivity extends AppCompatActivity {
     //for choosing image from gallery
     private void chooseImage() {
 
-        if (CAPTURE_CODE == "PHOTO"){
+        if (CAPTURE_CODE == "PHOTO") {
             Intent intent = new Intent();
             intent.setType("image/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -466,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
     //for choosing video from gallery
     private void chooseVideo() {
 
-        if (CAPTURE_CODE == "VIDEO"){
+        if (CAPTURE_CODE == "VIDEO") {
             Intent intent = new Intent();
             intent.setType("video/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -479,69 +533,68 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-       switch (requestCode){
+        switch (requestCode) {
 
-           case 10:
-               if(resultCode == RESULT_OK)
-               {
-                   Uri uri = data.getData();
-                   mImageShow = (ImageView)findViewById(R.id.photoView);
-                   mImageShow.setVisibility(View.VISIBLE);
-                   mImageShow.setImageURI(uri);
-                   mPhotoPath = uri.getPath();
-                   Log.v("TAG","path of image");
-               }
-               break;
+            case 10:
+                if (resultCode == RESULT_OK) {
+                    Uri uri = data.getData();
+                    mImageShow = (ImageView) findViewById(R.id.photoView);
+                    mImageShow.setVisibility(View.VISIBLE);
+                    mImageShow.setImageURI(uri);
+                    mPhotoPath = uri.getPath();
+                    Log.v("TAG", "path of image");
+                }
+                break;
 
-               //Image capture
-           case 15:
-               if (resultCode == RESULT_OK){
-                   galleryAddPic();
-                   Log.v("TAG","Gallery saved");
-                   image = new File(mCurrentPhotoPath);
-                   Uri uri = Uri.fromFile(image);
-                   mImageShow = (ImageView)findViewById(R.id.photoView);
-                   mImageShow.setVisibility(View.VISIBLE);
-                   mImageShow.setImageURI(uri);
-                   //filepath = imageUri.toString();
-                   Log.v("Tag","Image Done");
-                   mPhotoPath = uri.getPath();
-               }
-               break;
+            //Image capture
+            case 15:
+                if (resultCode == RESULT_OK) {
+                    galleryAddPic();
+                    Log.v("TAG", "Gallery saved");
+                    image = new File(mCurrentPhotoPath);
+                    Uri uri = Uri.fromFile(image);
+                    mImageShow = (ImageView) findViewById(R.id.photoView);
+                    mImageShow.setVisibility(View.VISIBLE);
+                    mImageShow.setImageURI(uri);
+                    //filepath = imageUri.toString();
+                    Log.v("Tag", "Image Done");
+                    mPhotoPath = uri.getPath();
+                }
+                break;
 
-           case 20:
+            case 20:
 
-              if (resultCode == RESULT_OK){
-                  Uri uri = data.getData();
-                  mVideoShow = (VideoView) findViewById(R.id.videoView);
-                  mVideoShow.setVisibility(View.VISIBLE);
-                  mVideoShow.setVideoURI(uri);
-                  MediaController mediaController = new MediaController(this);
-                  mediaController.setAnchorView(mVideoShow);
-                  mVideoShow.setMediaController(mediaController);
-                  mVideoPath = uri.getPath();
-              }
+                if (resultCode == RESULT_OK) {
+                    Uri uri = data.getData();
+                    mVideoShow = (VideoView) findViewById(R.id.videoView);
+                    mVideoShow.setVisibility(View.VISIBLE);
+                    mVideoShow.setVideoURI(uri);
+                    MediaController mediaController = new MediaController(this);
+                    mediaController.setAnchorView(mVideoShow);
+                    mVideoShow.setMediaController(mediaController);
+                    mVideoPath = uri.getPath();
+                }
 
-           break;
+                break;
 
-              //video capture
-           case 25:
+            //video capture
+            case 25:
 
-               if (resultCode == RESULT_OK){
-                   galleryAddVideo();
-                   video = new File(mCurrentVideoPath);
-                   Uri videoUri = Uri.fromFile(video);
-                   mVideoShow = (VideoView) findViewById(R.id.videoView);
-                   mVideoShow.setVisibility(View.VISIBLE);
-                   mVideoShow.setVideoURI(videoUri);
-                   MediaController mediaController = new MediaController(this);
-                   mediaController.setAnchorView(mVideoShow);
-                   mVideoShow.setMediaController(mediaController);
-                   mVideoPath = videoUri.getPath();
-               }
+                if (resultCode == RESULT_OK) {
+                    galleryAddVideo();
+                    video = new File(mCurrentVideoPath);
+                    Uri videoUri = Uri.fromFile(video);
+                    mVideoShow = (VideoView) findViewById(R.id.videoView);
+                    mVideoShow.setVisibility(View.VISIBLE);
+                    mVideoShow.setVideoURI(videoUri);
+                    MediaController mediaController = new MediaController(this);
+                    mediaController.setAnchorView(mVideoShow);
+                    mVideoShow.setMediaController(mediaController);
+                    mVideoPath = videoUri.getPath();
+                }
 
 
-       }
+        }
     }
 
 
@@ -598,67 +651,64 @@ public class MainActivity extends AppCompatActivity {
 
         // Save a file: path for use with ACTION_VIEW intents
         mCurrentVideoPath = video.getAbsolutePath();
-        Log.v("TAG","From createFile" + mCurrentVideoPath);
+        Log.v("TAG", "From createFile" + mCurrentVideoPath);
         return video;
     }
 
 
-    //For uploading final Data to server
-    public void uploadData(){
+  /*  //For uploading final Data to server
+    public void uploadData() {
 
         Connection connection = new Connection();
-        if ( connection.isConnectingToInternet(getApplicationContext())){
+        if (connection.isConnectingToInternet(getApplicationContext())) {
 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
 
                     List<AttachmentModel> putAttach = db.getAllAttachments();
-                    count = putAttach.size();
-                    Log.v("TAG","Value of count is : " + count);
-                    Log.v("TAG","display putAttach  " + putAttach.size());
+                    Log.v("TAG", "display putAttach  " + putAttach.size());
                     List<BaselineModel> putBase = db.getAllBaseline();
 
-                    if (putAttach != null){
+                    if (putAttach != null) {
                         AttachmentModel attach;
                         BaselineModel base;
-                        for (int i = 0; i < putAttach.size() ;i++){
+                        for (int i = 0; i < putAttach.size(); i++) {
                             attach = putAttach.get(i);
                             base = putBase.get(i);
-                            Log.v("TAG","value of base is" + base.toString());
+                            Log.v("TAG", "value of base is" + base.toString());
 
-                            if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath())){
+                            if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath())) {
 
                                 //imageStatus = uploadImage(attach.getPhotoPath());
                                 //videoStatus = uploadVideo(attach.getVideoPath());
-                                uploadBoth(attach.getPhotoPath(),attach.getVideoPath(), attach, base);
+                                uploadBoth(attach.getPhotoPath(), attach.getVideoPath(), attach, base);
                             }
-                            if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())){
+                            if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getVideoPath())) {
 
-                                 uploadImage(attach.getPhotoPath(),attach,base);
+                                uploadImage(attach.getPhotoPath(), attach, base);
                                 //db.deleteAttachment(attach);
-                               /* if (flag == 1){
-                                    db.updateAttachmentPhotoStatus(attach);
-                                    uploadDataBaseline();
-                                    Log.v("TAG","UploadDataBaseline called");
-                                    //uploadDataAttachment();
-                                }*/
+//                               if (flag == 1){
+//                                    db.updateAttachmentPhotoStatus(attach);
+//                                    uploadDataBaseline();
+//                                    Log.v("TAG","UploadDataBaseline called");
+//                                    //uploadDataAttachment();
+//                                }
 
                             }
-                            if (!TextUtils.isEmpty(attach.getVideoPath())  && TextUtils.isEmpty(attach.getPhotoPath())){
+                            if (!TextUtils.isEmpty(attach.getVideoPath()) && TextUtils.isEmpty(attach.getPhotoPath())) {
 
-                                uploadVideo(attach.getVideoPath(),attach,base);
+                                uploadVideo(attach.getVideoPath(), attach, base);
                             }
 
                         }
                     }
                 }
             }).start();
-        }
-        else {
-            JobInfo jobInfo = new JobInfo.Builder(jobID++,new ComponentName(this,MyJobService.class))
+        } else {
+            JobInfo jobInfo = new JobInfo.Builder(jobID++, new ComponentName(this, MyJobService.class))
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
-            JobScheduler jobScheduler=(JobScheduler)getSystemService(JOB_SCHEDULER_SERVICE);
+            JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
             jobScheduler.schedule(jobInfo);
             Toast.makeText(this, "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
         }
@@ -668,67 +718,61 @@ public class MainActivity extends AppCompatActivity {
     //For uploading data on given server of attachments
     private void uploadDataAttachment(final AttachmentModel attach) {
 
-        Log.v("TAG","Upload Data Attachment Called");
         new Thread(new Runnable() {
             @Override
             public void run() {
 
-                        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
+                //if (put != null){
 
-                                Toast.makeText(MainActivity.this,"Response :" +response,Toast.LENGTH_SHORT).show();
-                                Log.v("TAG","upload on xampp of attachment");
-                                Log.v("TAG",response);
-                                db.deleteAttachment(attach);
-                                Log.v("TAG","Data uploaded of :" + count);
-                                count --;
-                                Log.v("TAG","Value of count is :" + count);
-                                Log.v("TAG","Record deleted from attachment");
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
+                //for (final AttachmentModel attach : put){
 
-                                Toast.makeText(MainActivity.this,"some error found .....",Toast.LENGTH_SHORT).show();
-                                error.printStackTrace();
-                                Log.v("TAG","upload on xampp unsuccessful");
-                                Log.v("TAG",error.toString());
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
 
-                            }
-                        }){
+                        Toast.makeText(MainActivity.this, "Response :" + response, Toast.LENGTH_LONG).show();
+                        Log.v("TAG", "upload on xampp of attachment");
+                        Log.v("TAG", response);
+                        db.deleteAttachment(attach);
+                        Log.v("TAG", "Record deleted from attachment");
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
 
-                            @Override
-                            protected Map<String, String> getParams() throws AuthFailureError {
+                        Toast.makeText(MainActivity.this, "some error found .....", Toast.LENGTH_SHORT).show();
+                        error.printStackTrace();
+                        Log.v("TAG", "upload on xampp unsuccessful");
+                        Log.v("TAG", error.toString());
 
-                                String baselineId = attach.getBaselineId();
-                                String photoPath = attach.getPhotoPath();
-                                String videoPath = attach.getVideoPath();
-                                String photoStatus = attach.getPhotoStatus();
-                                String videoStatus = attach.getVideoStatus();
-                                String mimeType = attach.getMimeType();
-                                Map<String,String> details = new HashMap<>();
-                                details.put("baseline_id",baselineId);
-                                details.put("photo_path",photoPath);
-                                details.put("video_path",videoPath);
-                                details.put("photo_status",photoStatus);
-                                details.put("video_status",videoStatus);
-                                details.put("mime_type",mimeType);
-                                return details;
-                            }
-                        };
+                    }
+                }) {
 
-                        MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
 
-                    //}
+                        String baselineId = attach.getBaselineId();
+                        String photoPath = attach.getPhotoPath();
+                        String videoPath = attach.getVideoPath();
+                        String photoStatus = attach.getPhotoStatus();
+                        String videoStatus = attach.getVideoStatus();
+                        String mimeType = attach.getMimeType();
+                        Map<String, String> details = new HashMap<>();
+                        details.put("baseline_id", baselineId);
+                        details.put("photo_path", photoPath);
+                        details.put("video_path", videoPath);
+                        details.put("photo_status", photoStatus);
+                        details.put("video_status", videoStatus);
+                        details.put("mime_type", mimeType);
+                        return details;
+                    }
+                };
+
+                MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
                 //}
-
+                //}
             }
         }).start();
-
-        if (count != 1)
-            uploadData();
-
     }
 
 
@@ -739,52 +783,52 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
 
-               // List<BaselineModel> put = db.getAllBaseline();
+                // List<BaselineModel> put = db.getAllBaseline();
                 //if (put != null){
 
-                   // for (final BaselineModel base : put){
+                // for (final BaselineModel base : put){
 
-                        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_baseline, new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_baseline, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
 
-                                Toast.makeText(MainActivity.this,"Response :"+response,Toast.LENGTH_LONG).show();
-                                Log.v("TAG","upload on xampp of baseline");
-                                Log.v("TAG",response);
-                                db.deleteBaseline(base);
-                                Log.v("TAG","Record deleted from Baseline");
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, "Response :" + response, Toast.LENGTH_LONG).show();
+                        Log.v("TAG", "upload on xampp of baseline");
+                        Log.v("TAG", response);
+                        db.deleteBaseline(base);
+                        Log.v("TAG", "Record deleted from Baseline");
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
 
-                                Toast.makeText(MainActivity.this,"some error found .....",Toast.LENGTH_SHORT).show();
-                                error.printStackTrace();
-                                Log.v("TAG","upload on xampp unsuccessful");
-                                Log.v("TAG",error.toString());
+                        Toast.makeText(MainActivity.this, "some error found .....", Toast.LENGTH_SHORT).show();
+                        error.printStackTrace();
+                        Log.v("TAG", "upload on xampp unsuccessful");
+                        Log.v("TAG", error.toString());
 
-                            }
-                        }){
+                    }
+                }) {
 
-                            @Override
-                            protected Map<String, String> getParams() throws AuthFailureError {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
 
-                                String name = base.getName();
-                                String photoTitle = base.getPhotoTitle();
-                                String videoTitle = base.getVideoTitle();
-                                String message = base.getMessage();
-                                Map<String,String> details = new HashMap<>();
-                                details.put("name",name);
-                                details.put("photo_title",photoTitle);
-                                details.put("video_title",videoTitle);
-                                details.put("message",message);
-                                return details;
-                            }
-                        };
+                        String name = base.getName();
+                        String photoTitle = base.getPhotoTitle();
+                        String videoTitle = base.getVideoTitle();
+                        String message = base.getMessage();
+                        Map<String, String> details = new HashMap<>();
+                        details.put("name", name);
+                        details.put("photo_title", photoTitle);
+                        details.put("video_title", videoTitle);
+                        details.put("message", message);
+                        return details;
+                    }
+                };
 
-                        MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
-                    //}
-               // }
+                MySingleton.getInstance(MainActivity.this).addTorequestque(stringRequest);
+                //}
+                // }
             }
         }).start();
     }
@@ -801,11 +845,10 @@ public class MainActivity extends AppCompatActivity {
                 status = ftpclient.ftpConnect(host, username, password, 21);
                 if (status) {
                     Log.d("TAG", "Connection Success");
-                    dbPhotoPath = "Images_" + uploadTimeStamp + "_" + rand + ".jpg";
-                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/" + dbPhotoPath, "soochana",getApplicationContext());
-                    if (uploadImageStatus){
-                        Log.v("TAG","Uploading image successful");
-                       // disconnect();
+                    uploadImageStatus = ftpclient.ftpUpload(photoPath, "/soochana/Images_" + uploadTimeStamp + ".jpg", "soochana", getApplicationContext());
+                    if (uploadImageStatus) {
+                        Log.v("TAG", "Uploading image successful");
+                        // disconnect();
                     }
                 } else {
                     Log.d("TAG", "Connection failed from image");
@@ -816,28 +859,23 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status2 = ftpclient.ftpConnect(host, username, password, 21);
-                random = new Random();
-                rand = random.nextInt(1000);
                 if (status2) {
                     Log.d("TAG", "Connection Success");
-                    dbVideoPath = "Videos_" + uploadTimeStamp + "_" + rand + ".jpg";
-                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/" + dbVideoPath, "soochana",getApplicationContext());
-                    if (uploadvideoStatus){
-                        Log.v("TAG","Uploading video successful");
+                    uploadvideoStatus = ftpclient.ftpUpload(videoPath, "/soochana/Videos_" + uploadTimeStamp + ".mp4", "soochana", getApplicationContext());
+                    if (uploadvideoStatus) {
+                        Log.v("TAG", "Uploading video successful");
                         disconnect();
                     }
                 } else {
                     Log.d("TAG", "Connection failed from image");
                 }
 
-                if (uploadImageStatus && uploadvideoStatus){
+                if (uploadImageStatus && uploadvideoStatus) {
                     db.updateAttachmentPhotoVideoStatus(attach);
                     tempPhotoStatus = "1";
                     tempVideoStatus = "1";
                     attach.setPhotoStatus(tempPhotoStatus);
                     attach.setVideoStatus(tempVideoStatus);
-                    db.updatePhotoPath(dbPhotoPath,attach);
-                    db.updateVideoPath(dbVideoPath,attach);
                     uploadDataBaseline(base);
                     uploadDataAttachment(attach);
                 }
@@ -848,7 +886,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     //For uploading image on FTP Server
-    public void uploadImage(final String photoPath, final AttachmentModel attach, final BaselineModel base){
+    public void uploadImage(final String photoPath, final AttachmentModel attach, final BaselineModel base) {
 
         new Thread(new Runnable() {
             public void run() {
@@ -857,35 +895,28 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status = ftpclient.ftpConnect(host, username, password, 21);
-               /* try {
+                try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }*/
-                random = new Random();
-                rand = random.nextInt(1000);
-                Log.v("TAg","Value of status is  " + status);
+                }
+                Log.v("TAg", "Value of status is  " + status);
                 if (status) {
                     Log.d("TAG", "Connection Success");
-                    dbPhotoPath = "Images_" + uploadTimeStamp + "_" + rand + ".jpg";
-                    uploadImageStatus = ftpclient.ftpUpload(photoPath,"/soochana/" + dbPhotoPath,"soochana",getApplicationContext());
-                    if (uploadImageStatus){
-                        Log.v("TAG",uploadImageStatus.toString());
+                    uploadImageStatus = ftpclient.ftpUpload(photoPath, "/soochana/Images_" + uploadTimeStamp + ".jpg", "soochana", getApplicationContext());
+                    if (uploadImageStatus) {
+                        Log.v("TAG", uploadImageStatus.toString());
                         mFlag = 1;
-                        Log.v("TAG","Uploading image successful");
+                        Log.v("TAG", "Uploading image successful");
                         db.updateAttachmentPhotoStatus(attach);
 
                         tempPhotoStatus = "1";
                         attach.setPhotoStatus(tempPhotoStatus);
-                        Log.v("TAG","Status updated : " + attach.getPhotoStatus());
-                        db.updatePhotoPath(dbPhotoPath,attach);
-                        //attach.setPhotoPath(dbPhotoPath);
-                        Log.v("TAG","Photo path updated :" + attach.getPhotoPath());
-
+                        Log.v("TAG", "Status updated : " + attach.getPhotoStatus());
                         uploadDataBaseline(base);
-                        Log.v("TAG","UploadDataBaseline called");
                         uploadDataAttachment(attach);
-                        //disconnect();
+                        Log.v("TAG", "UploadDataBaseline called");
+                        disconnect();
                     }
                 } else {
                     Log.d("TAG", "Connection failed from image");
@@ -897,7 +928,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     //For uploading video on FTP server
-    public void uploadVideo(final String videoPath, final AttachmentModel attach, final BaselineModel base){
+    public void uploadVideo(final String videoPath, final AttachmentModel attach, final BaselineModel base) {
 
         new Thread(new Runnable() {
             public void run() {
@@ -906,21 +937,17 @@ public class MainActivity extends AppCompatActivity {
                 // username & password – for your secured login
                 // 21 default gateway for FTP
                 status = ftpclient.ftpConnect(host, username, password, 21);
-                random = new Random();
-                rand = random.nextInt(1000);
                 if (status) {
                     Log.d("TAG", "Connection Success");
-                    dbVideoPath = "Videos_" + uploadTimeStamp + "_" + rand + ".jpg";
-                    uploadvideoStatus = ftpclient.ftpUpload(videoPath,"/soochana/" + dbVideoPath,"soochana",getApplicationContext());
-                    if (uploadvideoStatus){
-                        Log.v("TAG","Uploading video successful");
+                    uploadvideoStatus = ftpclient.ftpUpload(videoPath, "/soochana/Videos_" + uploadTimeStamp + ".mp4", "soochana", getApplicationContext());
+                    if (uploadvideoStatus) {
+                        Log.v("TAG", "Uploading video successful");
                         db.updateAttachmentVideoStatus(attach);
                         tempVideoStatus = "1";
                         attach.setVideoStatus(tempVideoStatus);
-                        db.updateVideoPath(dbVideoPath,attach);
                         uploadDataBaseline(base);
                         uploadDataAttachment(attach);
-                        Log.v("TAG","UploadDataBaseline called");
+                        Log.v("TAG", "UploadDataBaseline called");
                         disconnect();
                     }
                 } else {
@@ -941,7 +968,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
     }
-
+*/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -950,8 +977,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId()== R.id.logoutText){
-                
+        if (item.getItemId() == R.id.logoutText) {
+
         }
         return super.onOptionsItemSelected(item);
     }
