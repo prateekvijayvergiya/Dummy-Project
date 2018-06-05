@@ -113,6 +113,9 @@ public class MainActivity extends AppCompatActivity {
         //For getting the TimeStamp
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         uploadTimeStamp = timeStamp;
+        final JobInfo jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
+        final JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
 
         //  startService(new Intent(getApplicationContext(),MyService.class));
         //finalUpload();
@@ -288,10 +291,9 @@ public class MainActivity extends AppCompatActivity {
                     new NetworkTask(allAttachments, allBaselines).execute();
 
                 } else {
-                    JobInfo jobInfo = new JobInfo.Builder(jobID++, new ComponentName(getApplicationContext(), MyJobService.class))
-                            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
-                    JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+
                     jobScheduler.schedule(jobInfo);
+                    jobID++;
                     Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
 
                 }
