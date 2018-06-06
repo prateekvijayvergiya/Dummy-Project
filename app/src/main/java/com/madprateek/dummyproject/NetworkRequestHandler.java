@@ -19,7 +19,6 @@ import com.madprateek.dummyproject.ModelClasses.BaselineModel;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class NetworkRequestHandler {
@@ -27,14 +26,15 @@ public class NetworkRequestHandler {
     private ArrayList<AttachmentModel> attachmentModels;
     private ArrayList<BaselineModel> baselineModels;
     private Context context;
-    private final String server_url_baseline = "http://192.168.0.104/Baseline.php";
-    private final String server_url_attachments = "http://192.168.0.104/attachments.php";
+    private final String server_url_baseline = "http://192.168.12.160/Baseline.php";
+    private final String server_url_attachments = "http://192.168.12.160/attachments.php";
     private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
     private MyFTPClientFunctions ftpclient;
     private DatabaseHelper db;
     String tempPhotoStatus, tempVideoStatus;
+    String dbPhotoPath = " ", dbVideoPath = " ";
 
 
     public NetworkRequestHandler(Context ctx, ArrayList<AttachmentModel> attachmentModels, ArrayList<BaselineModel> baselineModels) {
@@ -160,7 +160,8 @@ public class NetworkRequestHandler {
         Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
         if (ftpConnectionStatus) {
             String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-            boolean uploadImageStatus = ftpclient.ftpUpload(path, "/soochana/Images_" + uploadTimeStamp + ".jpg", "soochana", context);
+            dbPhotoPath = "Images_" + uploadTimeStamp + ".jpg";
+            boolean uploadImageStatus = ftpclient.ftpUpload(path, "/soochana/" + dbPhotoPath , "soochana", context);
             Log.d("Image Status", String.valueOf(uploadImageStatus));
 
             if (uploadImageStatus) {
@@ -168,6 +169,7 @@ public class NetworkRequestHandler {
 
                 tempPhotoStatus = "1";
                 attach.setPhotoStatus(tempPhotoStatus);
+                db.updatePhotoPath(dbPhotoPath,attach);
                 Log.d("Local Db Status :", attach.getPhotoStatus());
                 ftpclient.ftpDisconnect();
 
@@ -181,12 +183,14 @@ public class NetworkRequestHandler {
         Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
         if (ftpConnectionStatus) {
             String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-            boolean uploadvideoStatus = ftpclient.ftpUpload(path, "/soochana/Videos_" + uploadTimeStamp + ".mp4", "soochana", context);
+            dbVideoPath = "Videos_" + uploadTimeStamp + ".mp4";
+            boolean uploadvideoStatus = ftpclient.ftpUpload(path, "/soochana/" + dbVideoPath, "soochana", context);
             if (uploadvideoStatus) {
                 Log.v("TAG", "Uploading video successful");
                 db.updateAttachmentVideoStatus(attach);
                 tempVideoStatus = "1";
                 attach.setVideoStatus(tempVideoStatus);
+                db.updateVideoPath(dbVideoPath,attach);
                 ftpclient.ftpDisconnect();
 
             }

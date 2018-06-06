@@ -37,8 +37,8 @@ public class MyJobService extends JobService {
     int mFlag = 0, rand = 0;
     static  int count =0;
     Random random;
-    String server_url_baseline = "http://192.168.0.104/Baseline.php";
-    String server_url_attachments = "http://192.168.0.104/attachments.php";
+    String server_url_baseline = "http://192.168.12.160/Baseline.php";
+    String server_url_attachments = "http://192.168.12.160/attachments.php";
     ArrayList<AttachmentModel> allAttachments ;
     ArrayList<BaselineModel> allBaselines ;
     NetworkRequestHandler nrh ;

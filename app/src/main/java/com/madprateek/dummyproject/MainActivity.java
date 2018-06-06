@@ -34,14 +34,8 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.madprateek.dummyproject.HelperClasses.DatabaseHelper;
 import com.madprateek.dummyproject.HelperClasses.MyFTPClientFunctions;
-import com.madprateek.dummyproject.HelperClasses.MySingleton;
 import com.madprateek.dummyproject.ModelClasses.AttachmentModel;
 import com.madprateek.dummyproject.ModelClasses.BaselineModel;
 
@@ -50,9 +44,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -73,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
     private MyFTPClientFunctions ftpclient = null;
-    String server_url_baseline = "http://192.168.0.104/Baseline.php";
-    String server_url_attachments = "http://192.168.0.104/attachments.php";
+    String server_url_baseline = "http://192.168.12.160/Baseline.php";
+    String server_url_attachments = "http://192.168.12.160/attachments.php";
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
@@ -297,6 +288,19 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
 
                 }
+
+
+              if (mPhotoTitleText != null){
+                    mPhotoTitleText.setText("");
+                    mImageShow.setVisibility(View.GONE);
+              }
+
+              if (mVideoTitleText != null){
+                    mVideoTitleText.setText("");
+                    mVideoShow.setVisibility(View.GONE);
+              }
+
+              mMessageText.setText("");
 //                    Log.v("TAG","upload data called");
 
             }
