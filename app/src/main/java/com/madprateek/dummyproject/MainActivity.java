@@ -36,6 +36,7 @@ import android.widget.VideoView;
 
 import com.madprateek.dummyproject.HelperClasses.DatabaseHelper;
 import com.madprateek.dummyproject.HelperClasses.MyFTPClientFunctions;
+import com.madprateek.dummyproject.HelperClasses.SessionManager;
 import com.madprateek.dummyproject.ModelClasses.AttachmentModel;
 import com.madprateek.dummyproject.ModelClasses.BaselineModel;
 
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     String mPhotoPath, mVideoPath;
     private DatabaseHelper db;
     String baseId, tempPhotoStatus = "0", tempVideoStatus = "0";
+    SessionManager session;
     int mFlag = 0;
     //File image;
     Boolean imageStatus, videoStatus, uploadvideoStatus, uploadImageStatus;
@@ -99,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
         mSubmitBtn = (Button) findViewById(R.id.submitBtn);
         db = new DatabaseHelper(this);
         ftpclient = new MyFTPClientFunctions();
+        session = new SessionManager(getApplicationContext());
+
+        session.checkLogin();
 
 
         //For getting the TimeStamp
@@ -290,17 +295,17 @@ public class MainActivity extends AppCompatActivity {
                 }
 
 
-              if (mPhotoTitleText != null){
+             /* if (mPhotoTitleText != null){
                     mPhotoTitleText.setText("");
                     mImageShow.setVisibility(View.GONE);
-              }
+              }*/
 
-              if (mVideoTitleText != null){
+             /* if (mVideoTitleText != null){
                     mVideoTitleText.setText("");
                     mVideoShow.setVisibility(View.GONE);
-              }
+              }*/
 
-              mMessageText.setText("");
+             // mMessageText.setText("");
 //                    Log.v("TAG","upload data called");
 
             }
@@ -985,7 +990,15 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.logoutText) {
 
+            session.logoutUser();
+        }
+
+        if (item.getItemId() == R.id.submissionText){
+
+            Intent intent = new Intent(MainActivity.this,SubmissionActivity.class);
+            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

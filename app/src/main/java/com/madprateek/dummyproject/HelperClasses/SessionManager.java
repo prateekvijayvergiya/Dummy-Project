@@ -3,6 +3,7 @@ package com.madprateek.dummyproject.HelperClasses;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.CountDownTimer;
 
 import com.madprateek.dummyproject.LoginActivity;
 
@@ -21,8 +22,10 @@ public class SessionManager {
     // Shared pref mode
     int PRIVATE_MODE = 0;
 
+    CountDownTimer countDownTimer;
+
     // Sharedpref file name
-    private static final String PREF_NAME = "AndroidHivePref";
+    private static final String PREF_NAME = "madPrateekPref";
 
     // All Shared Preferences Keys
     private static final String IS_LOGIN = "IsLoggedIn";
@@ -31,7 +34,6 @@ public class SessionManager {
     public static final String KEY_NAME = "name";
 
     // Email address (make variable public to access from outside)
-    public static final String KEY_EMAIL = "email";
 
     // Constructor
     public SessionManager(Context context){
@@ -43,18 +45,38 @@ public class SessionManager {
     /**
      * Create login session
      * */
-    public void createLoginSession(String name, String email){
+    public void createLoginSession(String username){
         // Storing login value as TRUE
         editor.putBoolean(IS_LOGIN, true);
 
         // Storing name in pref
-        editor.putString(KEY_NAME, name);
-
-        // Storing email in pref
-        editor.putString(KEY_EMAIL, email);
+        editor.putString(KEY_NAME, username);
 
         // commit changes
         editor.commit();
+
+       // showHandler();
+    }
+
+    private void showHandler() {
+
+        //Toast.makeText(getApplicationContext(), "please wait 30 second", Toast.LENGTH_SHORT).show();
+
+        countDownTimer = new CountDownTimer(10000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                editor.putBoolean(IS_LOGIN,true);
+
+            }
+
+            public void onFinish() {
+                editor.putBoolean(IS_LOGIN,false);
+                logoutUser();
+                Intent intent = new Intent(_context,LoginActivity.class);
+                _context.startActivity(intent);
+            }
+
+        }.start();
     }
 
     /**
@@ -90,7 +112,6 @@ public class SessionManager {
         user.put(KEY_NAME, pref.getString(KEY_NAME, null));
 
         // user email id
-        user.put(KEY_EMAIL, pref.getString(KEY_EMAIL, null));
 
         // return user
         return user;
