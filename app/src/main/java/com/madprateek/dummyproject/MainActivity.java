@@ -294,6 +294,9 @@ public class MainActivity extends AppCompatActivity {
 
                 }
 
+               Intent intent = new Intent(MainActivity.this,FinishActivity.class);
+                startActivity(intent);
+
 
              /* if (mPhotoTitleText != null){
                     mPhotoTitleText.setText("");

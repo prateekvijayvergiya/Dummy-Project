@@ -1,6 +1,8 @@
 package com.madprateek.dummyproject;
 
 import android.content.Context;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -118,6 +120,7 @@ public class NetworkRequestHandler {
                 Toast.makeText(context, "Response :" + response, Toast.LENGTH_LONG).show();
                 Log.d("TAG", "upload of attachment to remote db successful");
                 Log.d("TAG", response);
+                sendNotification();
             }
         }, new Response.ErrorListener() {
             @Override
@@ -152,6 +155,19 @@ public class NetworkRequestHandler {
 
         MySingleton.getInstance(context).addTorequestque(stringRequest);
 
+    }
+
+    private void sendNotification() {
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+                .setSmallIcon(R.drawable.favicon)
+                .setContentTitle("Data Upload")
+                .setContentText("Form Submitted Successfully")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+// notificationId is a unique int for each notification that you must define
+        notificationManager.notify(0, mBuilder.build());
     }
 
     private void uploadImage(String path, AttachmentModel attach) {

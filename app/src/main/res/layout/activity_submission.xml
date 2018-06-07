@@ -8,5 +8,56 @@
     tools:context=".SubmissionActivity">
 
     <include layout="@layout/app_bar"
-        android:id="@+id/submissionAppBar"/>
+        android:id="@+id/submissionAppBar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_below="@+id/submissionAppBar"
+        android:id="@+id/topLayout">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:text="Forms Submitted"
+            android:textSize="25dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0"
+            android:id="@+id/submittedText"
+            android:textSize="25dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:orientation="horizontal"
+        android:layout_below="@+id/topLayout"
+        android:id="@+id/bottomLayout">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:text="Pending Submissions"
+            android:textSize="25dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0"
+            android:id="@+id/pendingText"
+            android:textSize="25dp"/>
+    </LinearLayout>
+
 </RelativeLayout>
