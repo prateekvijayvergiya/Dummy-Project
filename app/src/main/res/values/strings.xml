@@ -2,10 +2,10 @@
     <string name="app_name">DummyProject</string>
 
     <string-array name="nameArray">
-        <item>Dummy</item>
-        <item>Dummy</item>
-        <item>Dummy</item>
-        <item>Dummy</item>
-        <item>Dummy</item>
+        <item>Shahpura</item>
+        <item>Manpura</item>
+        <item>Kekri</item>
+        <item>Dhanota</item>
+        <item>Alwar</item>
     </string-array>
 </resources>

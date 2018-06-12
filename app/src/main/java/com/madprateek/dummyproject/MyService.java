@@ -283,13 +283,9 @@ public class MyService extends Service {
                     protected Map<String, String> getParams() throws AuthFailureError {
 
                         String name = base.getName();
-                        String photoTitle = base.getPhotoTitle();
-                        String videoTitle = base.getVideoTitle();
                         String message = base.getMessage();
                         Map<String,String> details = new HashMap<>();
                         details.put("name",name);
-                        details.put("photo_title",photoTitle);
-                        details.put("video_title",videoTitle);
                         details.put("message",message);
                         return details;
                     }
@@ -343,14 +339,12 @@ public class MyService extends Service {
                         String videoPath = attach.getVideoPath();
                         String photoStatus = attach.getPhotoStatus();
                         String videoStatus = attach.getVideoStatus();
-                        String mimeType = attach.getMimeType();
                         Map<String,String> details = new HashMap<>();
                         details.put("baseline_id",baselineId);
                         details.put("photo_path",photoPath);
                         details.put("video_path",videoPath);
                         details.put("photo_status",photoStatus);
                         details.put("video_status",videoStatus);
-                        details.put("mime_type",mimeType);
                         return details;
                     }
                 };

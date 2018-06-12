@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -34,7 +35,9 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.madprateek.dummyproject.HelperClasses.AudioFunctions;
 import com.madprateek.dummyproject.HelperClasses.DatabaseHelper;
+import com.madprateek.dummyproject.HelperClasses.DeviceLocation;
 import com.madprateek.dummyproject.HelperClasses.MyFTPClientFunctions;
 import com.madprateek.dummyproject.HelperClasses.SessionManager;
 import com.madprateek.dummyproject.ModelClasses.AttachmentModel;
@@ -45,6 +48,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
     private Button mPhotoBtn, mVideoBtn, mSubmitBtn;
     private int REQUEST_CAMERA = 100;
     private int REQUEST_STORAGE = 200;
+    private int REQUEST_AUDIO_RECORD = 300;
+    private int REQUEST_LOCATION = 400;
+    private int REQUEST_PHONE_STATE = 500;
     private static Boolean REQUEST_STATUS = false;
     private String CAPTURE_CODE;
     private int REQUEST_IMAGE_PICK = 10;
@@ -64,19 +71,22 @@ public class MainActivity extends AppCompatActivity {
     private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
-    private MyFTPClientFunctions ftpclient = null;
+    MyFTPClientFunctions ftpclient = null;
     String server_url_baseline = "http://192.168.12.160/Baseline.php";
     String server_url_attachments = "http://192.168.12.160/attachments.php";
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
-    private EditText mPhotoTitleText, mVideoTitleText, mMessageText;
-    private String mCurrentPhotoPath, mCurrentVideoPath, uploadTimeStamp, spinnerContent, mMimeType;
+    private EditText mPhotoTitleText, mVideoTitleText, mAudioTitleText, mMessageText;
+    private String mCurrentPhotoPath, mCurrentVideoPath, uploadTimeStamp, spinnerContent;
     private File image, video;
     String mPhotoPath, mVideoPath;
     private DatabaseHelper db;
-    String baseId, tempPhotoStatus = "0", tempVideoStatus = "0";
+    String baseId, tempPhotoStatus = "0", tempVideoStatus = "0", tempAudioStatus = "0", mLocation = " ", mDeviceId, mOutputFile = " ";
     SessionManager session;
+    DeviceLocation deviceLocation;
+    AudioFunctions audioFunctions;
+    Button mStartBtn, mStopBtn, mPlayBtn, mRecStopBtn;
     int mFlag = 0;
     //File image;
     Boolean imageStatus, videoStatus, uploadvideoStatus, uploadImageStatus;
@@ -95,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
         mNameSpinner = initSpinner(mNameSpinner, R.array.nameArray);
         mPhotoTitleText = (EditText) findViewById(R.id.photoTitle);
         mVideoTitleText = (EditText) findViewById(R.id.videoTitle);
+        mAudioTitleText = (EditText) findViewById(R.id.audioTitle);
         mMessageText = (EditText) findViewById(R.id.messageEditText);
         mPhotoBtn = (Button) findViewById(R.id.photoClickBtn);
         mVideoBtn = (Button) findViewById(R.id.videoClickBtn);
@@ -102,8 +113,24 @@ public class MainActivity extends AppCompatActivity {
         db = new DatabaseHelper(this);
         ftpclient = new MyFTPClientFunctions();
         session = new SessionManager(getApplicationContext());
+        audioFunctions = new AudioFunctions(getApplicationContext());
+        deviceLocation = new DeviceLocation();
 
         session.checkLogin();
+        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
+        }else  mLocation = deviceLocation.getmLocation();
+
+        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE)!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_PHONE_STATE"}, REQUEST_PHONE_STATE);
+        }else  mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+
+
+        //Audio Buttons
+        mStartBtn = (Button) findViewById(R.id.StartBtn);
+        mStopBtn = (Button) findViewById(R.id.StopBtn);
+        mPlayBtn = (Button) findViewById(R.id.playBtn);
+        mRecStopBtn = (Button) findViewById(R.id.stopBtn);
 
 
         //For getting the TimeStamp
@@ -231,15 +258,51 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        mStartBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO)
+                        != PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.RECORD_AUDIO"}, REQUEST_AUDIO_RECORD);
+                }else audioFunctions.startRec();
+            }
+        });
+
+        mStopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioFunctions.stopRec();
+            }
+        });
+
+        mPlayBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioFunctions.playRec();
+            }
+        });
+
+        mRecStopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioFunctions.stopPlay();
+            }
+        });
+
         //For submitting the form
         mSubmitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                String name = spinnerContent;
+                HashMap<String, String> user = session.getUserDetails();
+                String name = user.get(SessionManager.KEY_NAME);
+                String village = spinnerContent;
                 String photoTitleText = mPhotoTitleText.getText().toString();
                 String videoTitleText = mVideoTitleText.getText().toString();
+                String audioTitleText = mAudioTitleText.getText().toString();
                 String messageText = mMessageText.getText().toString();
+                mOutputFile = audioFunctions.getOutputFile();
+                Log.v("TAG","Audio path is : " + mOutputFile);
 
                 //for getting the empty text
                 if (!TextUtils.isEmpty(photoTitleText)) {
@@ -257,13 +320,16 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     messageText = "-";
                 }
+                if (!TextUtils.isEmpty(audioTitleText)){
+                    audioTitleText = audioTitleText;
+                }else audioTitleText = "-";
 
                 //for getting the mime type
-                if (!TextUtils.isEmpty(mPhotoPath) && !TextUtils.isEmpty(mVideoPath)) {
+               /* if (!TextUtils.isEmpty(mPhotoPath) && !TextUtils.isEmpty(mVideoPath)) {
                     mMimeType = "JPEG/mp4";
                 } else if (!TextUtils.isEmpty(mPhotoPath)) {
                     mMimeType = "JPEG";
-                } else mMimeType = "mp4";
+                } else mMimeType = "mp4";*/
 
 
                 //for setting video and photo path
@@ -274,8 +340,10 @@ public class MainActivity extends AppCompatActivity {
                     mVideoPath = mVideoPath;
                 } else mVideoPath = "";
 
-                storeBaseline(name, photoTitleText, videoTitleText, messageText);
-                storeAttachment(baseId, tempPhotoStatus, tempVideoStatus, mPhotoPath, mVideoPath, mMimeType);
+                String serverId = "";
+                storeBaseline(name,village, mLocation, messageText, mDeviceId);
+                storeAttachment(baseId, serverId, photoTitleText, videoTitleText, audioTitleText, tempPhotoStatus, tempVideoStatus, tempAudioStatus,
+                                mPhotoPath, mVideoPath, mOutputFile);
                 //showDataBasseline();
                 //showDataAttachment();
 
@@ -356,14 +424,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }*/
 
-    private void storeAttachment(String id, String s, String s1, String mPhotoPath, String mVideoPath, String mMimeType) {
-        AttachmentModel attach = new AttachmentModel(id, s, s1, mPhotoPath, mVideoPath, mMimeType);
+    private void storeAttachment(String id, String serverId, String photoTitle, String videoTitle, String audioTitle,
+                                 String photoStatus, String videoStatus, String audioStatus,
+                                 String mPhotoPath, String mVideoPath, String audioPath) {
+        AttachmentModel attach = new AttachmentModel(id, serverId, photoTitle, videoTitle, audioTitle, photoStatus,
+                                                      videoStatus, audioStatus, mPhotoPath, mVideoPath, audioPath);
         db.addAttachment(attach);
         Log.v("TAG - attachment", "Data inserted row created in attachment");
     }
 
-    private void storeBaseline(String spinnerContent, String photoTitleText, String videoTitleText, String messageText) {
-        BaselineModel base = new BaselineModel(spinnerContent, photoTitleText, videoTitleText, messageText);
+    private void storeBaseline(String username, String spinnerContent, String location, String message, String deviceId) {
+        BaselineModel base = new BaselineModel(username,spinnerContent,location,message,deviceId);
         long Id = db.addBaseline(base);
         //baseId = Long.toString(Id);
         baseId = String.valueOf(Id);
@@ -468,6 +539,35 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
 
+                //AUDIO
+            case 300:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    audioFunctions.startRec();
+                    mOutputFile = audioFunctions.getOutputFile();
+                }else {
+                    mOutputFile = audioFunctions.getOutputFile();
+                    //Toast.makeText(this, "You require permission for capturing audio", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+                //FOR LOCATION
+            case 400:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    mLocation = deviceLocation.getmLocation();
+                }else {
+                    mLocation = deviceLocation.getmLocation();
+                    //Toast.makeText(this, "You require permission for capturing location", Toast.LENGTH_SHORT).show();
+                }break;
+
+                //FOR device id
+            case 500:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+                }else{
+                    mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+                   // Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
     }
 
@@ -556,7 +656,7 @@ public class MainActivity extends AppCompatActivity {
                     mImageShow.setVisibility(View.VISIBLE);
                     mImageShow.setImageURI(uri);
                     mPhotoPath = uri.getPath();
-                    Log.v("TAG", "path of image");
+                    Log.v("TAG", "path of image : " + mPhotoPath);
                 }
                 break;
 

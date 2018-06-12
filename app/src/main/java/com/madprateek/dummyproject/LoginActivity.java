@@ -27,7 +27,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button mLoginBtn;
     private TextView mAccText;
     SessionManager session;
-    String loginUrl = "http://portal.jaipurrugsco.com/jrapi/public/dashboard/validate";
+    String loginUrl = "http://portal.jaipurrugsco.com/jrapi/public/soochana/validate";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

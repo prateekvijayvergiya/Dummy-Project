@@ -2,10 +2,36 @@ package com.madprateek.dummyproject.ModelClasses;
 
 public class BaselineModel {
 
-    private String photoTitle;
-    private String videoTitle;
     private String message;
     private String name;
+    private String villageName;
+    private String location;
+    private String deviceId;
+
+    public String getVillageName() {
+        return villageName;
+    }
+
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
     public String id;
 
     public BaselineModel() {
@@ -28,29 +54,13 @@ public class BaselineModel {
         this.id = id;
     }
 
-    public BaselineModel( String name, String photoTitle, String videoTitle, String message) {
-        this.photoTitle = photoTitle;
-        this.videoTitle = videoTitle;
+    public BaselineModel( String name, String villageName, String location, String message, String deviceId) {
+        this.villageName = villageName;
+        this.location = location;
+        this.deviceId = deviceId;
         this.message = message;
         this.name = name;
 
-    }
-
-    public String getPhotoTitle() {
-
-        return photoTitle;
-    }
-
-    public void setPhotoTitle(String photoTitle) {
-        this.photoTitle = photoTitle;
-    }
-
-    public String getVideoTitle() {
-        return videoTitle;
-    }
-
-    public void setVideoTitle(String videoTitle) {
-        this.videoTitle = videoTitle;
     }
 
     public String getMessage() {
