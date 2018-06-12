@@ -24,21 +24,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_ID_2 = "id2";
     private static final String KEY_SERVER_ID = "serverId";
     private static final String KEY_NAME = "name";
-    private static final String KEY_PHOTO_TITLE = "photoTitle";
-    private static final String KEY_VIDEO_TITLE = "videoTitle";
-    private static final String KEY_AUDIO_TITLE = "audioTitle";
     private static final String KEY_MESSAGE = "message";
     private static final String KEY_BASELINE_ID = "baselineId";
-    private static final String KEY_PHOTO_STATUS = "photoStatus";
-    private static final String KEY_VIDEO_STATUS = "videoStatus";
-    private static final String KEY_AUDIO_STATUS = "audioStatus";
-    private static final String KEY_PHOTO_PATH = "photoPath";
-    private static final String KEY_VIDEO_PATH = "videoPath";
-    private static final String KEY_AUDIO_PATH = "audioPath";
-    private static final String KEY_MIMETYPE = "mimeType";
     private static final String KEY_VILLAGE_NAME = "villageName";
     private static final String KEY_LOCATON = "locaton";
     private static final String KEY_DEVICE = "deviceId";
+    private static final String KEY_SUBJECT = "subject";
+    private static final String KEY_PATH = "path";
+    private static final String KEY_TYPE = "mimeType";
+    private static final String KEY_STATUS = "status";
 
 
     SQLiteDatabase db;
@@ -54,14 +48,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATION_BASELINE);
         Log.v("TAG-Table creation","Baseline table created");
 
-        String CREATION_ATTACHMENTS = "CREATE TABLE "+ATTACHMENTS+" (" + KEY_ID_2 + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+       /* String CREATION_ATTACHMENTS = "CREATE TABLE "+ATTACHMENTS+" (" + KEY_ID_2 + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + KEY_BASELINE_ID + " INTEGER," + KEY_SERVER_ID + " INTEGER,"  + KEY_PHOTO_TITLE + " TEXT," + KEY_VIDEO_TITLE + " TEXT," + KEY_AUDIO_TITLE + " TEXT," + KEY_PHOTO_STATUS + " INTEGER,"
                 + KEY_VIDEO_STATUS + " INTEGER," + KEY_AUDIO_STATUS + " INTEGER," + KEY_PHOTO_PATH + " TEXT,"
                 + KEY_VIDEO_PATH + " TEXT," + KEY_AUDIO_PATH + " TEXT)";
+        db.execSQL(CREATION_ATTACHMENTS);*/
+        String CREATION_ATTACHMENTS = "CREATE TABLE " +ATTACHMENTS+" (" + KEY_ID_2 + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + KEY_BASELINE_ID + " INTEGER," + KEY_SERVER_ID + " INTEGER," + KEY_SUBJECT + " TEXT," + KEY_PATH + " TEXT,"
+                + KEY_TYPE + " TEXT," + KEY_STATUS + " INTEGER)";
         db.execSQL(CREATION_ATTACHMENTS);
         Log.v("TAG- Table creation", "Attachments table created");
     }
-           //+ "FOREIGN KEY ("+KEY_BASELINE_ID+") REFERENCES "+BASELINE+" ("+KEY_ID+"))";
+    //+ "FOREIGN KEY ("+KEY_BASELINE_ID+") REFERENCES "+BASELINE+" ("+KEY_ID+"))";
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -97,7 +95,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return mId;
     }
-    
+
 
     public void addAttachment(AttachmentModel attach){
 
@@ -105,15 +103,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_BASELINE_ID, attach.getBaselineId());
         values.put(KEY_SERVER_ID,attach.getServerId());
-        values.put(KEY_PHOTO_TITLE, attach.getPhotoTitle());
-        values.put(KEY_VIDEO_TITLE, attach.getVideoTitle());
-        values.put(KEY_AUDIO_TITLE, attach.getAudioTitle());
-        values.put(KEY_PHOTO_STATUS, attach.getPhotoStatus());
-        values.put(KEY_VIDEO_STATUS, attach.getVideoStatus());
-        values.put(KEY_AUDIO_STATUS, attach.getAudioStatus());
-        values.put(KEY_PHOTO_PATH, attach.getPhotoPath());
-        values.put(KEY_VIDEO_PATH, attach.getVideoPath());
-        values.put(KEY_AUDIO_PATH, attach.getAudioPath());
+        values.put(KEY_SUBJECT,attach.getSubject());
+        values.put(KEY_PATH,attach.getPath());
+        values.put(KEY_TYPE,attach.getType());
+        values.put(KEY_STATUS,attach.getStatus());
         db.insert(ATTACHMENTS, null,values);
         Log.v("TAG","Attachment Row Added");
         db.close();
@@ -156,16 +149,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 attach = new AttachmentModel();
                 attach.setId2(cursor.getString(0));
                 attach.setBaselineId(cursor.getString(1));
-                attach.setPhotoTitle(cursor.getString(3));
                 attach.setServerId(cursor.getString(2));
-                attach.setVideoTitle(cursor.getString(4));
-                attach.setAudioTitle(cursor.getString(5));
-                attach.setPhotoStatus(cursor.getString(6));
-                attach.setVideoStatus(cursor.getString(7));
-                attach.setAudioStatus(cursor.getString(8));
-                attach.setPhotoPath(cursor.getString(9));
-                attach.setVideoPath(cursor.getString(10));
-                attach.setAudioPath(cursor.getString(11));
+                attach.setSubject(cursor.getString(3));
+                attach.setPath(cursor.getString(4));
+                attach.setType(cursor.getString(5));
+                attach.setStatus(cursor.getString(6));
                 fetchAttachments.add(attach);
                 Log.v("TAG - Attachment","Data Fetching");
             }while (cursor.moveToNext());
@@ -185,7 +173,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void updateAttachmentPhotoStatus(AttachmentModel attach){
+  /*  public void updateAttachmentPhotoStatus(AttachmentModel attach){
         db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(KEY_PHOTO_STATUS,"1");
@@ -248,7 +236,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(ATTACHMENTS, values, KEY_ID_2 + " = ?", new String[]{String.valueOf(attach.getId2())});
         attach.setAudioPath(dbAudioPath);
         db.close();
-    }
+    }*/
 
     public void updateServerId (String serverId,AttachmentModel attach){
         db = this.getWritableDatabase();

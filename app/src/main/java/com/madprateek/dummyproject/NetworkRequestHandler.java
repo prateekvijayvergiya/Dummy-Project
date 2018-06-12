@@ -4,24 +4,18 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.madprateek.dummyproject.HelperClasses.DatabaseHelper;
 import com.madprateek.dummyproject.HelperClasses.MyFTPClientFunctions;
 import com.madprateek.dummyproject.HelperClasses.MySingleton;
 import com.madprateek.dummyproject.ModelClasses.AttachmentModel;
 import com.madprateek.dummyproject.ModelClasses.BaselineModel;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -107,14 +101,14 @@ public class NetworkRequestHandler {
             for (int i = 0; i < putAttach.size() ;i++){
                 attach = putAttach.get(i);
                 base = putBase.get(i);
-                uploadBaseline(base,attach);
+                //uploadBaseline(base,attach);
                 //uploadAttachment(attach);
             }
         }
     }
 
 
-    private void uploadBaseline(final BaselineModel base, final AttachmentModel attach) {
+ /*   private void uploadBaseline(final BaselineModel base, final AttachmentModel attach) {
 
         String name = base.getName();
         String message = base.getMessage();
@@ -172,9 +166,9 @@ public class NetworkRequestHandler {
         MySingleton.getInstance(context).addTorequestque(jsonObjectRequest);
 
 
-    }
+    }*/
 
-    private void checkForAttachments(AttachmentModel attach) {
+ /*   private void checkForAttachments(AttachmentModel attach) {
         if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath()) && !TextUtils.isEmpty(attach.getAudioPath())) {
             //uploadImage(attach.getPhotoPath(), attach);
             //uploadVideo(attach.getVideoPath(), attach);
@@ -214,7 +208,7 @@ public class NetworkRequestHandler {
             //uploadAudio(attach.getAudioPath(),attach);
             new UploadAudio(attach.getAudioPath(),attach).execute();
         }
-    }
+    }*/
 
   /*  private void uploadBaseline(final BaselineModel model, final AttachmentModel attach) {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_baseline, new Response.Listener<String>() {
@@ -267,7 +261,7 @@ public class NetworkRequestHandler {
 
 
 
-    private void uploadAttachment(final AttachmentModel attach) {
+  /*  private void uploadAttachment(final AttachmentModel attach) {
 
         if (!TextUtils.isEmpty(attach.getPhotoPath())) {
             uploadImageAttachment(attach);
@@ -280,121 +274,9 @@ public class NetworkRequestHandler {
         }
 
 
-    }
+    }*/
 
-    private void uploadAudioAttachment(final AttachmentModel attach) {
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Toast.makeText(context, "Response :" + response, Toast.LENGTH_LONG).show();
-                Log.d("TAG", "upload of audio attachment to remote db successful");
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-                Toast.makeText(context, "Some error occurred..... Please Try Again Later .", Toast.LENGTH_SHORT).show();
-                error.printStackTrace();
-                Log.d("TAG", "upload of audio attachment to remote db unsuccessful");
-                Log.d("TAG", error.toString());
-            }
-        }) {
-
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-
-                String baselineId = serverBaselineId;
-                String subject = attach.getAudioTitle();
-                String audioPath = attach.getAudioPath();
-                String audioStatus = attach.getAudioStatus();
-                Map<String, String> details = new HashMap<>();
-                details.put("baseline_id", baselineId);
-                details.put("subject", subject);
-                details.put("audioPath", audioPath);
-                details.put("audioStatus", audioStatus);
-                return details;
-            }
-        };
-
-        MySingleton.getInstance(context).addTorequestque(stringRequest);
-    }
-
-    private void uploadVideoAttachment(final AttachmentModel attach) {
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Toast.makeText(context, "Response :" + response, Toast.LENGTH_LONG).show();
-                Log.d("TAG", "upload of video attachment to remote db successful");
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-                Toast.makeText(context, "Some error occurred..... Please Try Again Later .", Toast.LENGTH_SHORT).show();
-                error.printStackTrace();
-                Log.d("TAG", "upload of video attachment to remote db unsuccessful");
-                Log.d("TAG", error.toString());
-            }
-        }) {
-
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-
-                String baselineId = serverBaselineId;
-                String subject = attach.getVideoTitle();
-                String videoPath = attach.getVideoPath();
-                String videoStatus = attach.getVideoStatus();
-                Map<String, String> details = new HashMap<>();
-                details.put("baseline_id", baselineId);
-                details.put("subject", subject);
-                details.put("videoPath", videoPath);
-                details.put("videoStatus", videoStatus);
-                return details;
-            }
-        };
-
-        MySingleton.getInstance(context).addTorequestque(stringRequest);
-
-    }
-
-    private void uploadImageAttachment(final AttachmentModel attach) {
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_attachments, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Toast.makeText(context, "Response :" + response, Toast.LENGTH_LONG).show();
-                Log.d("TAG", "upload of photo attachment to remote db successful");
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-                Toast.makeText(context, "Some error occurred..... Please Try Again Later .", Toast.LENGTH_SHORT).show();
-                error.printStackTrace();
-                Log.d("TAG", "upload of photo attachment to remote db unsuccessful");
-                Log.d("TAG", error.toString());
-            }
-        }) {
-
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-
-               // String baselineId = "1";
-                String subject = attach.getPhotoTitle();
-                String photoPath = attach.getPhotoPath();
-               // String photoStatus = attach.getPhotoStatus();
-                Map<String, String> details = new HashMap<>();
-              //  details.put("baseline_id", baselineId);
-                details.put("photoSubject", subject);
-                details.put("photoPath", photoPath);
-              //  details.put("photo_status", photoStatus);
-                return details;
-            }
-        };
-
-        MySingleton.getInstance(context).addTorequestque(stringRequest);
-
-    }
 
     private void sendNotification() {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)

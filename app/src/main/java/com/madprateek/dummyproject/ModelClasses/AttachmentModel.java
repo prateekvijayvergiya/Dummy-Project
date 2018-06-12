@@ -4,15 +4,43 @@ public class AttachmentModel {
 
     private String baselineId;
     private String id2;
-    private String photoStatus;
-    private String videoStatus;
-    private String audioStatus;
-    private String photoPath;
-    private String videoPath;
-    private String audioPath;
-    private String photoTitle;
-    private String videoTitle;
-    private String audioTitle;
+    private String subject;
+    private String path;
+    private String type;
+    private String status;
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     private String serverId;
 
     public String getServerId() {
@@ -23,60 +51,15 @@ public class AttachmentModel {
         this.serverId = serverId;
     }
 
-    public String getAudioStatus() {
-        return audioStatus;
-    }
-
-    public void setAudioStatus(String audioStatus) {
-        this.audioStatus = audioStatus;
-    }
-
-    public String getAudioPath() {
-        return audioPath;
-    }
-
-    public void setAudioPath(String audioPath) {
-        this.audioPath = audioPath;
-    }
-
-    public String getPhotoTitle() {
-        return photoTitle;
-    }
-
-    public void setPhotoTitle(String photoTitle) {
-        this.photoTitle = photoTitle;
-    }
-
-    public String getVideoTitle() {
-        return videoTitle;
-    }
-
-    public void setVideoTitle(String videoTitle) {
-        this.videoTitle = videoTitle;
-    }
-
-    public String getAudioTitle() {
-        return audioTitle;
-    }
-
-    public void setAudioTitle(String audioTitle) {
-        this.audioTitle = audioTitle;
-    }
 
 
-    public AttachmentModel(String baselineId, String serverId, String photoTitle,String videoTitle, String audioTitle,
-                           String photoStatus, String videoStatus, String audioStatus, String photoPath, String videoPath, String audioPath) {
+    public AttachmentModel(String baselineId, String serverId, String subject, String path, String type, String status) {
         this.baselineId = baselineId;
-        this.photoStatus = photoStatus;
-        this.videoStatus = videoStatus;
-        this.photoPath = photoPath;
-        this.videoPath = videoPath;
-        this.photoTitle = photoTitle;
-        this.videoTitle = videoTitle;
-        this.audioTitle = audioTitle;
-        this.audioPath = audioPath;
-        this.audioStatus = audioStatus;
         this.serverId = serverId;
+        this.subject = subject;
+        this.path = path;
+        this.type = type;
+        this.status = status;
 
     }
 
@@ -93,37 +76,6 @@ public class AttachmentModel {
         this.baselineId = baselineId;
     }
 
-    public String getPhotoStatus() {
-        return photoStatus;
-    }
-
-    public void setPhotoStatus(String photoStatus) {
-        this.photoStatus = photoStatus;
-    }
-
-    public String getVideoStatus() {
-        return videoStatus;
-    }
-
-    public void setVideoStatus(String videoStatus) {
-        this.videoStatus = videoStatus;
-    }
-
-    public String getPhotoPath() {
-        return photoPath;
-    }
-
-    public void setPhotoPath(String photoPath) {
-        this.photoPath = photoPath;
-    }
-
-    public String getVideoPath() {
-        return videoPath;
-    }
-
-    public void setVideoPath(String videoPath) {
-        this.videoPath = videoPath;
-    }
 
     public String getId2() {
         return id2;
