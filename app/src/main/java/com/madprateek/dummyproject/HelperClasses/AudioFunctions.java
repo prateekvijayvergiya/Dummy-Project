@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.File;
 import java.io.IOException;
 
 public class AudioFunctions extends AppCompatActivity {
@@ -26,17 +25,22 @@ public class AudioFunctions extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-    }
-
-    public void startRec(){
-
         myAudioRecorder = new MediaRecorder();
         myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
         myAudioRecorder.setOutputFile(getFilename());
+
+    }
+
+    public void startRec(){
+
         try {
+            myAudioRecorder = new MediaRecorder();
+            myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+            myAudioRecorder.setOutputFile(getFilename());
             myAudioRecorder.prepare();
             myAudioRecorder.start();
         } catch (IllegalStateException ise) {
@@ -53,11 +57,6 @@ public class AudioFunctions extends AppCompatActivity {
        // outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + uploadTimeStamp + "/recording.3gp";
         //outputFile = getExternalCacheDir().getAbsolutePath() + uploadTimeStamp + "/recording.3gp";
        // Log.v("TAG","Audio storage path is : " + outputFile);
-        myAudioRecorder = new MediaRecorder();
-        myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
-        myAudioRecorder.setOutputFile(getFilename());
        // myAudioRecorder.stop();
         myAudioRecorder.release();
         myAudioRecorder = null;
@@ -93,14 +92,18 @@ public class AudioFunctions extends AppCompatActivity {
 
     private String getFilename()
     {
-        String filepath = Environment.getExternalStorageDirectory().getPath();
-        File file = new File(getExternalFilesDir(Environment.DIRECTORY_MUSIC), filepath);
+        long time = System.currentTimeMillis();
+        String filepath = Environment.getExternalStorageDirectory() + "/Android/data/com.madprateek.dummyproject/files/Pictures/" + "audio_" + time + ".mp3";
+        Log.v("TAG","PATH is " + filepath);
+       /* File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), filepath);
+        Log.v("TAG","file is " + file);
 
         if(!file.exists()){
             file.mkdirs();
-        }
+        }*/
 
-        outputFile = file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".mp3";
+        outputFile = filepath;     //file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".mp3";
+
         Log.v("TAG","Storage Path is : " + outputFile);
         return (outputFile);
     }

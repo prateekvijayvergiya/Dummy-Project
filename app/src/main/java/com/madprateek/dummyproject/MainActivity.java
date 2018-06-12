@@ -140,11 +140,6 @@ public class MainActivity extends AppCompatActivity {
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
         final JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
 
-        //  startService(new Intent(getApplicationContext(),MyService.class));
-        //finalUpload();
-//        uploadData();
-
-
         //For selecting content of Spinner
         mNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -324,14 +319,6 @@ public class MainActivity extends AppCompatActivity {
                     audioTitleText = audioTitleText;
                 }else audioTitleText = "-";
 
-                //for getting the mime type
-               /* if (!TextUtils.isEmpty(mPhotoPath) && !TextUtils.isEmpty(mVideoPath)) {
-                    mMimeType = "JPEG/mp4";
-                } else if (!TextUtils.isEmpty(mPhotoPath)) {
-                    mMimeType = "JPEG";
-                } else mMimeType = "mp4";*/
-
-
                 //for setting video and photo path
                 if (!TextUtils.isEmpty(mPhotoPath)) {
                     mPhotoPath = mPhotoPath;
@@ -344,8 +331,6 @@ public class MainActivity extends AppCompatActivity {
                 storeBaseline(name,village, mLocation, messageText, mDeviceId);
                 storeAttachment(baseId, serverId, photoTitleText, videoTitleText, audioTitleText, tempPhotoStatus, tempVideoStatus, tempAudioStatus,
                                 mPhotoPath, mVideoPath, mOutputFile);
-                //showDataBasseline();
-                //showDataAttachment();
 
 //                uploadData();
                 Connection connection = new Connection();
@@ -365,19 +350,6 @@ public class MainActivity extends AppCompatActivity {
                Intent intent = new Intent(MainActivity.this,FinishActivity.class);
                 startActivity(intent);
 
-
-             /* if (mPhotoTitleText != null){
-                    mPhotoTitleText.setText("");
-                    mImageShow.setVisibility(View.GONE);
-              }*/
-
-             /* if (mVideoTitleText != null){
-                    mVideoTitleText.setText("");
-                    mVideoShow.setVisibility(View.GONE);
-              }*/
-
-             // mMessageText.setText("");
-//                    Log.v("TAG","upload data called");
 
             }
         });
@@ -414,15 +386,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-  /*  private void finalUpload() {
-
-        List<AttachmentModel> put = db.getAllAttachments();
-        for (int i = put.size(); i >= 0; i--) {
-            Log.v("TAG", "Loop called : " + i);
-            uploadData();
-            Log.v("TAG", "from on create upload called");
-        }
-    }*/
 
     private void storeAttachment(String id, String serverId, String photoTitle, String videoTitle, String audioTitle,
                                  String photoStatus, String videoStatus, String audioStatus,
@@ -450,53 +413,6 @@ public class MainActivity extends AppCompatActivity {
         return s;
     }
 
-
-    //For showing data of baseline on logs
-  /*  private void showDataBasseline() {
-
-        List<BaselineModel> put = db.getAllBaseline();
-        for (BaselineModel base : put) {
-
-            String dId = base.getId();
-            String name = base.getName();
-            String dphoto = base.getPhotoTitle();
-            String dVideo = base.getVideoTitle();
-            String dmessage = base.getMessage();
-            HashMap<String, String> details = new HashMap<>();
-            details.put("id", dId);
-            details.put("\nname", name);
-            details.put("\nphoto", dphoto);
-            details.put("\nvideo", dVideo);
-            details.put("\nmessage", dmessage);
-            Log.v("Show Details", String.valueOf(details));
-        }
-    }
-
-    //For showing data of attachment on logs
-    private void showDataAttachment() {
-
-        List<AttachmentModel> put = db.getAllAttachments();
-        for (AttachmentModel attach : put) {
-
-            String dId = attach.getId2();
-            String fId = attach.getBaselineId();
-            String pPath = attach.getPhotoPath();
-            String vPath = attach.getVideoPath();
-            String pStatus = attach.getPhotoStatus();
-            String vStatus = attach.getVideoStatus();
-            String type = attach.getMimeType();
-            HashMap<String, String> details = new HashMap<>();
-            details.put("dId", dId);
-            details.put("\nfId", fId);
-            details.put("\npPath", pPath);
-            details.put("\nvpath", vPath);
-            details.put("\npStatus", pStatus);
-            details.put("\nvStatus", vStatus);
-            details.put("\ntype", type);
-            Log.v("Show Details", String.valueOf(details));
-        }
-    }
-    */
 
     //Request runtime permission to users
     @Override
