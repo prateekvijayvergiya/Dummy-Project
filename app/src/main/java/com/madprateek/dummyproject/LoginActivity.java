@@ -1,5 +1,6 @@
 package com.madprateek.dummyproject;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -28,6 +29,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextView mAccText;
     SessionManager session;
     String loginUrl = "http://portal.jaipurrugsco.com/jrapi/public/soochana/validate";
+    ProgressDialog mProgressDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,11 +40,15 @@ public class LoginActivity extends AppCompatActivity {
         mLoginBtn = (Button) findViewById(R.id.loginBtn);
         mAccText = (TextView) findViewById(R.id.switchtext);
         session = new SessionManager(getApplicationContext());
+        mProgressDialog = new ProgressDialog(this);
 
         mLoginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
+                mProgressDialog.setTitle("Logging In");
+                mProgressDialog.setMessage("Please Wait");
+                mProgressDialog.show();
                 String username = mUsername.getText().toString();
                 String pass = mLoginPass.getText().toString();
                 loginUser(username,pass);
@@ -65,6 +71,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onResponse(String response) {
                 if (response.equals("success")){
+                    mProgressDialog.dismiss();
                     Log.v("TAG","Response from server is : " + response);
                     session.createLoginSession(username);
                     Intent intent = new Intent(LoginActivity.this,MainActivity.class);

@@ -297,6 +297,9 @@ public class MainActivity extends AppCompatActivity {
                 String videoTitleText = mVideoTitleText.getText().toString();
                 String audioTitleText = mAudioTitleText.getText().toString();
                 String messageText = mMessageText.getText().toString();
+                String photoPath = mPhotoPath;
+                String videoPath = mVideoPath;
+                String audioPath = mOutputFile;
                 mOutputFile = audioFunctions.getOutputFile();
                 Log.v("TAG","Audio path is : " + mOutputFile);
 
@@ -307,7 +310,15 @@ public class MainActivity extends AppCompatActivity {
                     messageText = "-";
                 }
 
-                storeBaseline(name,village, mLocation, messageText, mDeviceId);
+                if (TextUtils.isEmpty(photoTitleText))
+                    photoTitleText = "";
+                if (TextUtils.isEmpty(videoTitleText))
+                    videoTitleText = "";
+                if (TextUtils.isEmpty(audioTitleText))
+                    audioTitleText = "";
+
+                storeBaseline(name,village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
+                        photoPath, videoPath, audioPath);
 
                 //for getting the empty text
                 if (!TextUtils.isEmpty(photoTitleText)) {
@@ -340,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
                     mVideoPath = mVideoPath;
                 } else mVideoPath = "";*/
 //             uploadData();
-              /*  Connection connection = new Connection();
+                Connection connection = new Connection();
                 if (connection.isConnectingToInternet(getApplicationContext())) {
                     ArrayList<AttachmentModel> allAttachments = (ArrayList) db.getAllAttachments();
                     ArrayList<BaselineModel> allBaselines = (ArrayList) db.getAllBaseline();
@@ -355,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Intent intent = new Intent(MainActivity.this,FinishActivity.class);
-                startActivity(intent);*/
+                startActivity(intent);
 
 
             }
@@ -400,8 +411,10 @@ public class MainActivity extends AppCompatActivity {
         Log.v("TAG - attachment", "Data inserted row created in attachment");
     }
 
-    private void storeBaseline(String username, String spinnerContent, String location, String message, String deviceId) {
-        BaselineModel base = new BaselineModel(username,spinnerContent,location,message,deviceId);
+    private void storeBaseline(String username, String spinnerContent, String location, String message, String deviceId, String photoTitleText,
+                               String videoTitleText, String audioTitleText, String photoPath, String videoPath, String audioPath) {
+        BaselineModel base = new BaselineModel(username,spinnerContent,location,message,deviceId,photoTitleText,videoTitleText,audioTitleText,
+                photoPath,videoPath,audioPath);
         long Id = db.addBaseline(base);
         //baseId = Long.toString(Id);
         baseId = String.valueOf(Id);

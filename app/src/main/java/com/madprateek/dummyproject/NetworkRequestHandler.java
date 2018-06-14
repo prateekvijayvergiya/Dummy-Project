@@ -5,11 +5,13 @@ import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.madprateek.dummyproject.HelperClasses.DatabaseHelper;
 import com.madprateek.dummyproject.HelperClasses.MyFTPClientFunctions;
@@ -17,10 +19,12 @@ import com.madprateek.dummyproject.HelperClasses.MySingleton;
 import com.madprateek.dummyproject.ModelClasses.AttachmentModel;
 import com.madprateek.dummyproject.ModelClasses.BaselineModel;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class NetworkRequestHandler {
@@ -37,7 +41,8 @@ public class NetworkRequestHandler {
     private DatabaseHelper db;
     String serverBaselineId;
     String tempPhotoStatus, tempVideoStatus;
-    String dbPhotoPath = " ", dbVideoPath = " ", dbAudioPath = " ", serverId;
+    String dbPhotoPath = " ", dbVideoPath = " ", dbAudioPath = " ", serverId, updatedId;
+    static ArrayList<AttachmentModel> globalAttach;
 
 
     public NetworkRequestHandler(Context ctx, ArrayList<AttachmentModel> attachmentModels, ArrayList<BaselineModel> baselineModels) {
@@ -49,93 +54,44 @@ public class NetworkRequestHandler {
     }
 
     public void uploadAllData() {
-        /*for (AttachmentModel attach : attachmentModels) {
-            if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath()) && !TextUtils.isEmpty(attach.getAudioPath())) {
-                uploadImage(attach.getPhotoPath(), attach);
-                uploadVideo(attach.getVideoPath(), attach);
-                uploadAudio(attach.getAudioPath(),attach);
-            }
-            if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath()) && TextUtils.isEmpty(attach.getAudioPath())) {
-                uploadImage(attach.getPhotoPath(), attach);
-                uploadVideo(attach.getVideoPath(), attach);
-
-            }
-            if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getAudioPath()) && TextUtils.isEmpty(attach.getVideoPath())) {
-                uploadImage(attach.getPhotoPath(), attach);
-                uploadAudio(attach.getAudioPath(),attach);
-
-            }
-            if (TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getAudioPath()) && !TextUtils.isEmpty(attach.getVideoPath())) {
-                uploadVideo(attach.getVideoPath(), attach);
-                uploadAudio(attach.getAudioPath(),attach);
-
-            }
-            if (!TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getAudioPath()) && TextUtils.isEmpty(attach.getVideoPath())) {
-                uploadImage(attach.getPhotoPath(), attach);
-
-            }
-            if (TextUtils.isEmpty(attach.getPhotoPath()) && TextUtils.isEmpty(attach.getAudioPath()) && !TextUtils.isEmpty(attach.getVideoPath())) {
-                uploadVideo(attach.getVideoPath(), attach);
-
-            }
-            if (TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getAudioPath()) && TextUtils.isEmpty(attach.getVideoPath())) {
-                uploadAudio(attach.getAudioPath(),attach);
-            }
-            uploadAttachment(attach);
-            db.deleteAttachment(attach);
-            Log.d("TAG", "Record deleted from attachment");
-        }
 
         for (BaselineModel base : baselineModels) {
-            uploadBaseline(base);
-        }*/
-
-
-
-
-        List<AttachmentModel> putAttach = db.getAllAttachments();
-        List<BaselineModel> putBase = db.getAllBaseline();
-        if (putBase != null){
-            AttachmentModel attach;
-            BaselineModel base;
-            for (int i = 0; i < putAttach.size() ;i++){
-                attach = putAttach.get(i);
-                base = putBase.get(i);
-                //uploadBaseline(base,attach);
-                //uploadAttachment(attach);
-            }
+            globalAttach = (ArrayList<AttachmentModel>) db.getSpecificAttachment(base.getId());
+            uploadBaseline(base,globalAttach);
         }
+
     }
 
 
- /*   private void uploadBaseline(final BaselineModel base, final AttachmentModel attach) {
+
+    private void uploadBaseline(final BaselineModel base, final ArrayList<AttachmentModel> attachmentModels) {
 
         String name = base.getName();
         String message = base.getMessage();
         String villageName = base.getVillageName();
         String deviceId = base.getDeviceId();
         String location = "India";
-        String photoSubject = attach.getPhotoTitle();
-        String photoPath = attach.getPhotoPath();
-        String videoSubject = attach.getPhotoTitle();
-        String videoPath = attach.getPhotoPath();
-        String audioSubject = attach.getAudioTitle();
-        String audioPath = attach.getAudioPath();
+        String photoSubject = base.getPhotoTitleText();
+        String videoSubject = base.getVideoTitleText();
+        String audioSubject = base.getAudioTitleText();
+        String photoPath = base.getPhotoPath();
+        String videoPath = base.getVideoPath();
+        String audioPath = base.getAudioPath();
         HashMap<String, String> details = new HashMap<>();
         details.put("username", name);
         details.put("village",villageName);
         details.put("deviceId",deviceId);
         details.put("location",location);
         details.put("message", message);
-        if (attach.getPhotoPath() != null){
+        if (base.getPhotoTitleText() != null){
             details.put("photoSubject", photoSubject);
             details.put("photoPath", photoPath);
         }
-        if (attach.getVideoPath() != null){
+        if (base.getVideoTitleText() != null){
             details.put("videoSubject", videoSubject);
             details.put("videoPath", videoPath);
         }
-        if (attach.getAudioPath() != null){
+        if (base.getAudioTitleText() != null){
             details.put("audioSubject", audioSubject);
             details.put("audioPath", audioPath);
         }
@@ -144,13 +100,25 @@ public class NetworkRequestHandler {
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    Toast.makeText(context, "Response :" + response, Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "Response :" + response, Toast.LENGTH_SHORT).show();
                     serverId = response.getString("baselineId");
+                    updatedId = serverId;
                     Log.v("TAG","SERVER ID IS : " + serverId);
-                    db.updateServerId(serverId,attach);
+                    db.updateServerId(serverId,base,attachmentModels);
+                    Log.v("TAG","selected specific attachments" + attachmentModels.toString());
+                    for (AttachmentModel attach : attachmentModels){
+                        attach.setServerId(serverId);
+                        Log.v("TAg","Set new server id " + attach.getServerId());
+                    }
+                    globalAttach = (ArrayList<AttachmentModel>) db.getAllAttachments();
+                    for (AttachmentModel attach : globalAttach){
+                        //updateIdServer(attach);
+                        //Log.v("TAG","Check for attachment called");
+                        Log.v("TAG","Server id in check attachment :" + attach.getServerId());
+                        checkForAttachments(attach);
+                    }
                     db.deleteBaseline(base);
                     Log.v("TAG","Baseline Data Deleted");
-                    checkForAttachments(attach);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -166,10 +134,27 @@ public class NetworkRequestHandler {
         MySingleton.getInstance(context).addTorequestque(jsonObjectRequest);
 
 
-    }*/
+    }
 
- /*   private void checkForAttachments(AttachmentModel attach) {
-        if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath()) && !TextUtils.isEmpty(attach.getAudioPath())) {
+    private void checkForAttachments(AttachmentModel attach) {
+
+        if (attach.getType().equals("photo")){
+            new UploadPicture(attach.getPath(),attach).execute();
+        }
+
+        if (attach.getType().equals("video")){
+            new UploadVideo(attach.getPath(),attach).execute();
+        }
+
+        if (attach.getType().equals("audio")){
+            new UploadAudio(attach.getPath(),attach).execute();
+        }
+
+
+
+
+
+      /*  if (!TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getVideoPath()) && !TextUtils.isEmpty(attach.getAudioPath())) {
             //uploadImage(attach.getPhotoPath(), attach);
             //uploadVideo(attach.getVideoPath(), attach);
             //uploadAudio(attach.getAudioPath(),attach);
@@ -207,8 +192,8 @@ public class NetworkRequestHandler {
         if (TextUtils.isEmpty(attach.getPhotoPath()) && !TextUtils.isEmpty(attach.getAudioPath()) && TextUtils.isEmpty(attach.getVideoPath())) {
             //uploadAudio(attach.getAudioPath(),attach);
             new UploadAudio(attach.getAudioPath(),attach).execute();
-        }
-    }*/
+        }*/
+    }
 
   /*  private void uploadBaseline(final BaselineModel model, final AttachmentModel attach) {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url_baseline, new Response.Listener<String>() {
@@ -291,82 +276,17 @@ public class NetworkRequestHandler {
         notificationManager.notify(0, mBuilder.build());
     }
 
-    private void uploadImage(String path, AttachmentModel attach) {
-
-        boolean ftpConnectionStatus = ftpclient.ftpConnect(host, username, password, 21);
-        Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
-        if (ftpConnectionStatus) {
-            String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-            dbPhotoPath = "Images_" + uploadTimeStamp + ".jpg";
-            boolean uploadImageStatus = ftpclient.ftpUpload(path, "/soochana/" + attach.getServerId() + dbPhotoPath , "soochana", context);
-            Log.d("Image Status", String.valueOf(uploadImageStatus));
-
-            if (uploadImageStatus) {
-                Log.v("TAG", "Uploading image successful");
-                //db.updateAttachmentPhotoStatus(attach);
-
-                //tempPhotoStatus = "1";
-                //attach.setPhotoStatus(tempPhotoStatus);
-                //db.updatePhotoPath(dbPhotoPath,attach);
-                String id = attach.getServerId();
-                String mimeType = "photo";
-                updateServerDetails(id,dbPhotoPath,mimeType);
-                //ftpclient.ftpDisconnect();
-
-            }
-        }
-
-    }
-
-    private void uploadVideo(String path, AttachmentModel attach) {
-        boolean ftpConnectionStatus = ftpclient.ftpConnect(host, username, password, 21);
-        Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
-        if (ftpConnectionStatus) {
-            String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-            dbVideoPath = "Videos_" + uploadTimeStamp + ".mp4";
-            boolean uploadvideoStatus = ftpclient.ftpUpload(path, "/soochana/" + dbVideoPath, "soochana", context);
-            if (uploadvideoStatus) {
-                Log.v("TAG", "Uploading video successful");
-                //db.updateAttachmentVideoStatus(attach);
-                //tempVideoStatus = "1";
-                //attach.setVideoStatus(tempVideoStatus);
-               // db.updateVideoPath(dbVideoPath,attach);
-                String id = attach.getServerId();
-                String mimeType = "video";
-                updateServerDetails(id,dbVideoPath,mimeType);
-                ftpclient.ftpDisconnect();
-
-            }
-        }
-    }
-
-    private void uploadAudio(String path, AttachmentModel attach){
-
-        boolean ftpConnectionStatus = ftpclient.ftpConnect(host, username, password, 21);
-        Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
-        if (ftpConnectionStatus){
-            String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-            dbAudioPath = "Audio_" + uploadTimeStamp + ".mp3";
-            boolean uploadAudioStatus = ftpclient.ftpUpload(path, "/soochana/" + dbAudioPath, "soochana", context);
-            if (uploadAudioStatus){
-                Log.v("TAG", "Uploading audio successful");
-               // db.updateAttachmentAudioStatus(attach);
-               // attach.setAudioStatus("1");
-                //db.updateAudioPath(dbAudioPath,attach);
-                String id = attach.getServerId();
-                String mimeType = "audio";
-                updateServerDetails(id,dbAudioPath,mimeType);
-            }
-        }
-
-    }
-
-    private void updateServerDetails(final String serverId, final String path, final String mimeType){
+    private void updateServerDetails(final String id, final String path, final String mimeType, final AttachmentModel attach){
         StringRequest stringRequest = new StringRequest(Request.Method.POST, server_update_url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
 
                 Log.v("TAG","response after updating server : " + response.toString());
+               if (response.equals("success")){
+                   db.deleteAttachment(attach);
+                   Toast.makeText(context, "successful work done", Toast.LENGTH_SHORT).show();
+                   Log.v("TAG","Row deleted from attachment");
+               }
 
             }
         }, new Response.ErrorListener() {
@@ -379,7 +299,8 @@ public class NetworkRequestHandler {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String,String > details = new HashMap<>();
-                details.put("baselineId",serverId);
+                details.put("baselineId",id);
+                Log.v("TAg","Value of server id in update server detail is :" + id);
                 details.put("path",path);
                 details.put("type",mimeType);
                 Log.v("TAG","Server details updated");
@@ -417,9 +338,10 @@ public class NetworkRequestHandler {
                     //attach.setPhotoStatus(tempPhotoStatus);
                     //db.updatePhotoPath(dbPhotoPath,attach);
                     String id = attach.getServerId();
+                    Log.v("TAg","Value of server id is :" + id);
                     String mimeType = "photo";
-                    updateServerDetails(id,dbPhotoPath,mimeType);
-                    //ftpclient.ftpDisconnect();
+                    updateServerDetails(id,dbPhotoPath,mimeType,attach);
+                    ftpclient.ftpDisconnect();
 
                 }
             }
@@ -453,8 +375,9 @@ public class NetworkRequestHandler {
                     //attach.setVideoStatus(tempVideoStatus);
                     // db.updateVideoPath(dbVideoPath,attach);
                     String id = attach.getServerId();
+                    Log.v("TAg","Value of server id is :" + id);
                     String mimeType = "video";
-                    updateServerDetails(id,dbVideoPath,mimeType);
+                    updateServerDetails(id,dbVideoPath,mimeType,attach);
                     ftpclient.ftpDisconnect();
 
                 }
@@ -487,8 +410,10 @@ public class NetworkRequestHandler {
                     // attach.setAudioStatus("1");
                     //db.updateAudioPath(dbAudioPath,attach);
                     String id = attach.getServerId();
+                    Log.v("TAg","Value of server id is :" + id);
                     String mimeType = "audio";
-                    updateServerDetails(id,dbAudioPath,mimeType);
+                    updateServerDetails(id,dbAudioPath,mimeType,attach);
+                    ftpclient.ftpDisconnect();
                 }
             }
 
