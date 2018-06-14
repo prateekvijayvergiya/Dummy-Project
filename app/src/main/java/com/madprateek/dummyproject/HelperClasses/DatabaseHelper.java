@@ -284,12 +284,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(KEY_SERVER_ID, serverId);
         db.update(ATTACHMENTS, values, KEY_BASELINE_ID + " = ?", new String[]{String.valueOf(base.getId())});
         Log.v("TAG", "Server id updated in attachment");
-        /*attachmentModels = (ArrayList<AttachmentModel>) getSpecificAttachment(id);
-        Log.v("TAG","selected specific attachments" + attachmentModels.toString());
-        for (AttachmentModel attach : attachmentModels){
-            attach.setServerId(serverId);
-            Log.v("TAg","Set new server id " + attach.getServerId());
-        }*/
         showData(id);
 
     }
