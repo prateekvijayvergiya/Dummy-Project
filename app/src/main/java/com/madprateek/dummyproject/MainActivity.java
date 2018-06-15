@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
-    String serverId = "";
+    String serverId = " ";
     MyFTPClientFunctions ftpclient = null;
     String server_url_baseline = "http://192.168.12.160/Baseline.php";
     String server_url_attachments = "http://192.168.12.160/attachments.php";

@@ -105,17 +105,21 @@ public class NetworkRequestHandler {
                     updatedId = serverId;
                     Log.v("TAG","SERVER ID IS : " + serverId);
                     db.updateServerId(serverId,base,attachmentModels);
-                    Log.v("TAG","selected specific attachments" + attachmentModels.toString());
                     for (AttachmentModel attach : attachmentModels){
                         attach.setServerId(serverId);
                         Log.v("TAg","Set new server id " + attach.getServerId());
                     }
-                    globalAttach = (ArrayList<AttachmentModel>) db.getAllAttachments();
+                    globalAttach = (ArrayList<AttachmentModel>) db.getAllAttachmentsServer();
                     for (AttachmentModel attach : globalAttach){
                         //updateIdServer(attach);
                         //Log.v("TAG","Check for attachment called");
-                        Log.v("TAG","Server id in check attachment :" + attach.getServerId());
-                        checkForAttachments(attach);
+
+                        if (!attach.getServerId().equals(" ")){
+                            Log.v("TAG","Server id in check attachment method is :" + attach.getServerId());
+                            Log.v("TAG","Baseline id in local database is    :" + attach.getBaselineId());
+                            checkForAttachments(attach);
+                        }
+
                     }
                     db.deleteBaseline(base);
                     Log.v("TAG","Baseline Data Deleted");
@@ -309,6 +313,35 @@ public class NetworkRequestHandler {
 
             return null;
         }
+    }
+
+
+    private void uploadImage(String path, AttachmentModel attach) {
+
+        boolean ftpConnectionStatus = ftpclient.ftpConnect(host, username, password, 21);
+        Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
+        if (ftpConnectionStatus) {
+            String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
+            dbPhotoPath = "Images_" + uploadTimeStamp + ".jpg";
+            boolean uploadImageStatus = ftpclient.ftpUpload(path, "/soochana/" + attach.getServerId() + dbPhotoPath , "soochana", context);
+            Log.d("Image Status", String.valueOf(uploadImageStatus));
+
+            if (uploadImageStatus) {
+                Log.v("TAG", "Uploading image successful");
+                //db.updateAttachmentPhotoStatus(attach);
+
+                //tempPhotoStatus = "1";
+                //attach.setPhotoStatus(tempPhotoStatus);
+                //db.updatePhotoPath(dbPhotoPath,attach);
+                String id = attach.getServerId();
+                Log.v("TAg","Value of server id is :" + id);
+                String mimeType = "photo";
+                updateServerDetails(id,dbPhotoPath,mimeType,attach);
+                //ftpclient.ftpDisconnect();
+
+            }
+        }
+
     }
 
 }

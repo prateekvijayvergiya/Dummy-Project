@@ -177,6 +177,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return  fetchAttachments;
     }
 
+
+    public List<AttachmentModel> getAllAttachmentsServer(){
+
+        List<AttachmentModel> fetchAttachments = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + ATTACHMENTS + " WHERE " + KEY_SERVER_ID + " IS NOT NULL";
+        db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery,null);
+        AttachmentModel attach;
+
+        if (cursor.moveToFirst()){
+            do {
+                attach = new AttachmentModel();
+                attach.setId2(cursor.getString(0));
+                attach.setBaselineId(cursor.getString(1));
+                attach.setServerId(cursor.getString(2));
+                attach.setSubject(cursor.getString(3));
+                attach.setPath(cursor.getString(4));
+                attach.setType(cursor.getString(5));
+                attach.setStatus(cursor.getString(6));
+                fetchAttachments.add(attach);
+            }while (cursor.moveToNext());
+        }
+        return  fetchAttachments;
+    }
+
     public  List<AttachmentModel> getSpecificAttachment(String id){
         List<AttachmentModel> fetch = new ArrayList<>();
         String selectQuery = "SELECT * FROM " + ATTACHMENTS + " WHERE " + KEY_BASELINE_ID + " = " + id;
@@ -284,7 +309,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(KEY_SERVER_ID, serverId);
         db.update(ATTACHMENTS, values, KEY_BASELINE_ID + " = ?", new String[]{String.valueOf(base.getId())});
         Log.v("TAG", "Server id updated in attachment");
-        showData(id);
+        //showData(id);
 
     }
 
@@ -293,8 +318,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<AttachmentModel> specificAttach = getSpecificAttachment(id);
         for (AttachmentModel attach : specificAttach){
            String server = attach.getServerId();
-           Log.v("TAG","\nServer id from show data is : " + server);
-           Log.v("TAG","\nServer id updated in DB from show data is : " + attach.getServerId());
         }
     }
 }

@@ -21,10 +21,10 @@ public class FinishActivity extends AppCompatActivity {
     public void showAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Uploading Status");
-        builder.setMessage("Your Data is saved in local Databse and uploaded Soon");
+        builder.setMessage("Data stored Successfully, will be sent once internet available");
         builder.show();
 
-        countDownTimer = new CountDownTimer(2000, 1000) {
+        countDownTimer = new CountDownTimer(3000, 1000) {
 
             public void onTick(long millisUntilFinished) {
 
