@@ -60,6 +60,16 @@ public class NetworkRequestHandler {
             uploadBaseline(base,globalAttach);
         }
 
+        globalAttach = (ArrayList<AttachmentModel>) db.getAllAttachmentsServer();
+        int start = 1;
+        for (AttachmentModel attach : globalAttach){
+            //updateIdServer(attach);
+            Log.v("TAG","Check for attachment called");
+            //Log.v("TAG","Server id in check attachment method is :" + attach.getServerId());
+                // Log.v("TAG","Baseline id in local database is    :" + attach.getBaselineId());
+                checkForAttachments(attach);
+        }
+
     }
 
 
@@ -70,6 +80,7 @@ public class NetworkRequestHandler {
         String message = base.getMessage();
         String villageName = base.getVillageName();
         String deviceId = base.getDeviceId();
+        //String location = base.getLocation();
         String location = "India";
         String photoSubject = base.getPhotoTitleText();
         String videoSubject = base.getVideoTitleText();
@@ -103,24 +114,27 @@ public class NetworkRequestHandler {
                     Toast.makeText(context, "Response :" + response, Toast.LENGTH_SHORT).show();
                     serverId = response.getString("baselineId");
                     updatedId = serverId;
-                    Log.v("TAG","SERVER ID IS : " + serverId);
+                   // Log.v("TAG","SERVER ID IS : " + serverId);
                     db.updateServerId(serverId,base,attachmentModels);
                     for (AttachmentModel attach : attachmentModels){
                         attach.setServerId(serverId);
-                        Log.v("TAg","Set new server id " + attach.getServerId());
+                        //Log.v("TAg","Set new server id " + attach.getServerId());
                     }
-                    globalAttach = (ArrayList<AttachmentModel>) db.getAllAttachmentsServer();
+                  /*  globalAttach = (ArrayList<AttachmentModel>) db.getAllAttachmentsServer();
+                    int start = 1;
                     for (AttachmentModel attach : globalAttach){
                         //updateIdServer(attach);
                         //Log.v("TAG","Check for attachment called");
 
+                        Log.v("TAG","value of start :" + start);
+                        start++;
                         if (!attach.getServerId().equals(" ")){
-                            Log.v("TAG","Server id in check attachment method is :" + attach.getServerId());
-                            Log.v("TAG","Baseline id in local database is    :" + attach.getBaselineId());
+                            //Log.v("TAG","Server id in check attachment method is :" + attach.getServerId());
+                           // Log.v("TAG","Baseline id in local database is    :" + attach.getBaselineId());
                             checkForAttachments(attach);
                         }
 
-                    }
+                    }*/
                     db.deleteBaseline(base);
                     Log.v("TAG","Baseline Data Deleted");
                 } catch (JSONException e) {
@@ -157,11 +171,11 @@ public class NetworkRequestHandler {
     }
 
     
-    private void sendNotification() {
+    private void sendNotification(String mimeType) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.favicon)
                 .setContentTitle("Data Upload")
-                .setContentText("Form Submitted Successfully")
+                .setContentText(mimeType + " uploaded Successfully")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
@@ -180,6 +194,7 @@ public class NetworkRequestHandler {
                    db.deleteAttachment(attach);
                    Toast.makeText(context, "successful work done", Toast.LENGTH_SHORT).show();
                    Log.v("TAG","Row deleted from attachment");
+                   sendNotification(mimeType);
                }
 
             }
@@ -314,34 +329,4 @@ public class NetworkRequestHandler {
             return null;
         }
     }
-
-
-    private void uploadImage(String path, AttachmentModel attach) {
-
-        boolean ftpConnectionStatus = ftpclient.ftpConnect(host, username, password, 21);
-        Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
-        if (ftpConnectionStatus) {
-            String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-            dbPhotoPath = "Images_" + uploadTimeStamp + ".jpg";
-            boolean uploadImageStatus = ftpclient.ftpUpload(path, "/soochana/" + attach.getServerId() + dbPhotoPath , "soochana", context);
-            Log.d("Image Status", String.valueOf(uploadImageStatus));
-
-            if (uploadImageStatus) {
-                Log.v("TAG", "Uploading image successful");
-                //db.updateAttachmentPhotoStatus(attach);
-
-                //tempPhotoStatus = "1";
-                //attach.setPhotoStatus(tempPhotoStatus);
-                //db.updatePhotoPath(dbPhotoPath,attach);
-                String id = attach.getServerId();
-                Log.v("TAg","Value of server id is :" + id);
-                String mimeType = "photo";
-                updateServerDetails(id,dbPhotoPath,mimeType,attach);
-                //ftpclient.ftpDisconnect();
-
-            }
-        }
-
-    }
-
 }

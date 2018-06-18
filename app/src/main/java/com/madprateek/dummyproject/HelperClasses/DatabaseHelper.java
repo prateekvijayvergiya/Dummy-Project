@@ -181,9 +181,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<AttachmentModel> getAllAttachmentsServer(){
 
         List<AttachmentModel> fetchAttachments = new ArrayList<>();
-        String selectQuery = "SELECT * FROM " + ATTACHMENTS + " WHERE " + KEY_SERVER_ID + " IS NOT NULL";
+        String selectQuery = "SELECT * FROM " + ATTACHMENTS + " WHERE " + KEY_SERVER_ID + " IS NOT NULL" ;
         db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,null);
+        //Cursor cursor = db.query(ATTACHMENTS, "*",KEY_SERVER_ID," != ?",new String("") );
+
         AttachmentModel attach;
 
         if (cursor.moveToFirst()){

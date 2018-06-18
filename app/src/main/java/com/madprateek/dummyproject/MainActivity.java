@@ -4,11 +4,17 @@ import android.Manifest;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -61,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private int REQUEST_AUDIO_RECORD = 300;
     private int REQUEST_LOCATION = 400;
     private int REQUEST_PHONE_STATE = 500;
+    private int REQUEST_HARDWARE_LOCATION = 600;
     private static Boolean REQUEST_STATUS = false;
     private String CAPTURE_CODE;
     private int REQUEST_IMAGE_PICK = 10;
@@ -71,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String host = "ftp.pixxel-fs2001.fingerprinti.com";
     private static final String username = "ftpfs2001";
     private static final String password = "u701aC/}9S";
-    String serverId = " ";
+    String serverId = null;
     MyFTPClientFunctions ftpclient = null;
     String server_url_baseline = "http://192.168.12.160/Baseline.php";
     String server_url_attachments = "http://192.168.12.160/attachments.php";
@@ -83,12 +90,14 @@ public class MainActivity extends AppCompatActivity {
     private File image, video;
     String mPhotoPath, mVideoPath;
     private DatabaseHelper db;
-    String baseId, tempStatus = "0", mLocation = " ", mDeviceId, mOutputFile = " ";
+    String baseId, tempStatus = "0", mLocation = null, mDeviceId, mOutputFile = " ";
     SessionManager session;
     DeviceLocation deviceLocation;
     AudioFunctions audioFunctions;
     Button mStartBtn, mStopBtn, mPlayBtn, mRecStopBtn;
     int mFlag = 0;
+    JobInfo jobInfo;
+    JobScheduler jobScheduler;
     //File image;
     Boolean imageStatus, videoStatus, uploadvideoStatus, uploadImageStatus;
 
@@ -115,18 +124,28 @@ public class MainActivity extends AppCompatActivity {
         ftpclient = new MyFTPClientFunctions();
         session = new SessionManager(getApplicationContext());
         audioFunctions = new AudioFunctions(getApplicationContext());
-        deviceLocation = new DeviceLocation();
+        //deviceLocation = new DeviceLocation();
+
+        //Log.v("TAG", "Location of device is : " + mLocation);
 
         session.checkLogin();
-        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
-        }else  mLocation = deviceLocation.getmLocation();
+        }
 
-        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE)!= PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_PHONE_STATE"}, REQUEST_PHONE_STATE);
-        }else  mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        } else
+            mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
 
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
+        }
 
+        //mLocation = getLocation();
+        //Log.v("TAG", "Location of device is : " + mLocation);
         //Audio Buttons
         mStartBtn = (Button) findViewById(R.id.StartBtn);
         mStopBtn = (Button) findViewById(R.id.StopBtn);
@@ -137,9 +156,20 @@ public class MainActivity extends AppCompatActivity {
         //For getting the TimeStamp
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         uploadTimeStamp = timeStamp;
-        final JobInfo jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
-        final JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
+                    .setPeriodic(16 * 60 * 1000)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
+            jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+
+        } else {
+            jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
+                    .setPeriodic(20000)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
+            jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+        }
 
         //For selecting content of Spinner
         mNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -258,9 +288,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO)
-                        != PackageManager.PERMISSION_GRANTED){
+                        != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.RECORD_AUDIO"}, REQUEST_AUDIO_RECORD);
-                }else audioFunctions.startRec();
+                } else audioFunctions.startRec();
             }
         });
 
@@ -301,70 +331,115 @@ public class MainActivity extends AppCompatActivity {
                 String videoPath = mVideoPath;
                 String audioPath = mOutputFile;
                 mOutputFile = audioFunctions.getOutputFile();
-                Log.v("TAG","Audio path is : " + mOutputFile);
+                Log.v("TAG", "Audio path is : " + mOutputFile);
 
 
-                if (!TextUtils.isEmpty(messageText)) {
-                    messageText = messageText;
-                } else {
-                    messageText = "-";
-                }
-
-                if (TextUtils.isEmpty(photoTitleText))
-                    photoTitleText = "";
-                if (TextUtils.isEmpty(videoTitleText))
-                    videoTitleText = "";
-                if (TextUtils.isEmpty(audioTitleText))
-                    audioTitleText = "";
-
-                storeBaseline(name,village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
-                        photoPath, videoPath, audioPath);
-
-                //for getting the empty text
-                if (!TextUtils.isEmpty(photoTitleText)) {
-                    String subject = photoTitleText;
-                    String path = mPhotoPath;
-                    String type = "photo";
-                    String status = "0";
-                    storeAttachment(baseId, serverId, subject, path, type, status);
-                }
-                if (!TextUtils.isEmpty(videoTitleText)) {
-                    String subject = videoTitleText;
-                    String path = mVideoPath;
-                    String type = "video";
-                    String status = "0";
-                    storeAttachment(baseId, serverId, subject, path, type, status);
-                }
-                if (!TextUtils.isEmpty(audioTitleText)){
-                    String subject = audioTitleText;
-                    String path = mOutputFile;
-                    String type = "audio";
-                    String status = "0";
-                    storeAttachment(baseId, serverId, subject, path, type, status);
-                }
-
-                Connection connection = new Connection();
-                if (connection.isConnectingToInternet(getApplicationContext())) {
-                    ArrayList<AttachmentModel> allAttachments = (ArrayList) db.getAllAttachments();
-                    ArrayList<BaselineModel> allBaselines = (ArrayList) db.getAllBaseline();
-                    new NetworkTask(allAttachments, allBaselines).execute();
+                if (TextUtils.isEmpty(photoTitleText) && TextUtils.isEmpty(videoTitleText) && TextUtils.isEmpty(audioTitleText) &&
+                        TextUtils.isEmpty(messageText)) {
+                    Toast.makeText(MainActivity.this, "Please fill required details", Toast.LENGTH_SHORT).show();
 
                 } else {
+                    if (!TextUtils.isEmpty(messageText)) {
+                        messageText = messageText;
+                    } else {
+                        messageText = "-";
+                    }
 
-                    jobScheduler.schedule(jobInfo);
-                    jobID++;
-                    Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
+                    if (TextUtils.isEmpty(photoTitleText))
+                        photoTitleText = "";
+                    if (TextUtils.isEmpty(videoTitleText))
+                        videoTitleText = "";
+                    if (TextUtils.isEmpty(audioTitleText))
+                        audioTitleText = "";
 
+
+                    storeBaseline(name, village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
+                            photoPath, videoPath, audioPath);
+
+                    //for getting the empty text
+                    if (!TextUtils.isEmpty(photoTitleText)) {
+                        String subject = photoTitleText;
+                        String path = mPhotoPath;
+                        String type = "photo";
+                        String status = "0";
+                        storeAttachment(baseId, serverId, subject, path, type, status);
+                    }
+                    if (!TextUtils.isEmpty(videoTitleText)) {
+                        String subject = videoTitleText;
+                        String path = mVideoPath;
+                        String type = "video";
+                        String status = "0";
+                        storeAttachment(baseId, serverId, subject, path, type, status);
+                    }
+                    if (!TextUtils.isEmpty(audioTitleText)) {
+                        String subject = audioTitleText;
+                        String path = mOutputFile;
+                        String type = "audio";
+                        String status = "0";
+                        storeAttachment(baseId, serverId, subject, path, type, status);
+                    }
+
+                    Connection connection = new Connection();
+                    if (connection.isConnectingToInternet(getApplicationContext())) {
+                        //ArrayList<AttachmentModel> allAttachments = (ArrayList) db.getAllAttachments();
+                        //ArrayList<BaselineModel> allBaselines = (ArrayList) db.getAllBaseline();
+                        //new NetworkTask(allAttachments, allBaselines).execute();
+                        jobScheduler.schedule(jobInfo);
+                        //jobID++;
+
+                    } else {
+
+                        jobScheduler.schedule(jobInfo);
+                        //jobID++;
+                        Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
+
+                    }
+
+                    Intent intent = new Intent(MainActivity.this, FinishActivity.class);
+                    startActivity(intent);
+                    finish();
                 }
-
-                Intent intent = new Intent(MainActivity.this,FinishActivity.class);
-                startActivity(intent);
-                finish();
 
 
             }
         });
 
+    }
+
+    public String getLocation() {
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                mLocation = "Latitude : " + location.getLatitude() + " , " + "Longitude : " + location.getLongitude();
+                Log.v("TAG", "location is :" + "Latitude : " + location.getLatitude() + " , " + "Longitude : " + location.getLongitude());
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
+
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
+        String locationProvider = LocationManager.GPS_PROVIDER;
+        //locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
+        return mLocation;
     }
 
     class NetworkTask extends AsyncTask<Void, Void, String> {
@@ -479,9 +554,9 @@ public class MainActivity extends AppCompatActivity {
             //FOR LOCATION
             case 400:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    mLocation = deviceLocation.getmLocation();
+                    mLocation = getLocation();
                 }else {
-                    mLocation = deviceLocation.getmLocation();
+                    mLocation = getLocation();
                     //Toast.makeText(this, "You require permission for capturing location", Toast.LENGTH_SHORT).show();
                 }break;
 
@@ -494,6 +569,14 @@ public class MainActivity extends AppCompatActivity {
                     // Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
                 }
                 break;
+
+            case 600:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                   mLocation = getLocation();
+                }else{
+                    mLocation= getLocation();
+                    // Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
+                }
         }
     }
 
@@ -581,7 +664,7 @@ public class MainActivity extends AppCompatActivity {
                     mImageShow = (ImageView) findViewById(R.id.photoView);
                     mImageShow.setVisibility(View.VISIBLE);
                     mImageShow.setImageURI(uri);
-                    mPhotoPath = uri.getPath();
+                    mPhotoPath = getImagePath(uri);
                     Log.v("TAG", "path of image : " + mPhotoPath);
                 }
                 break;
@@ -612,7 +695,7 @@ public class MainActivity extends AppCompatActivity {
                     MediaController mediaController = new MediaController(this);
                     mediaController.setAnchorView(mVideoShow);
                     mVideoShow.setMediaController(mediaController);
-                    mVideoPath = uri.getPath();
+                    mVideoPath = getVideoPath(uri);
                 }
 
                 break;
@@ -635,6 +718,42 @@ public class MainActivity extends AppCompatActivity {
 
 
         }
+    }
+
+
+    public String getImagePath(Uri uri){
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        String document_id = cursor.getString(0);
+        document_id = document_id.substring(document_id.lastIndexOf(":")+1);
+        cursor.close();
+
+        cursor = getContentResolver().query(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+        cursor.moveToFirst();
+        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        cursor.close();
+
+        return path;
+    }
+
+
+    public String getVideoPath(Uri uri){
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        String document_id = cursor.getString(0);
+        document_id = document_id.substring(document_id.lastIndexOf(":")+1);
+        cursor.close();
+
+        cursor = getContentResolver().query(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+        cursor.moveToFirst();
+        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        cursor.close();
+
+        return path;
     }
 
 
@@ -706,6 +825,7 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.logoutText) {
 
             session.logoutUser();
+            finish();
         }
 
         if (item.getItemId() == R.id.submissionText){

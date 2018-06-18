@@ -33,7 +33,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
                 android:text="Photo Title   (फोटो शीर्षक)"
-                android:textSize="20dp"
+                android:textSize="15dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:layout_below="@+id/nameSpiner"
@@ -81,7 +81,7 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:text="Video Title   (वीडियो शीषर्क)"
-                android:textSize="20dp"
+                android:textSize="15dp"
                 android:layout_below="@+id/photoView"
                 android:id="@+id/videoText"/>
 
@@ -131,7 +131,7 @@
                 android:layout_marginRight="10dp"
                 android:id="@+id/audioText"
                 android:layout_below="@+id/videoView"
-                android:textSize="20dp"/>
+                android:textSize="15dp"/>
 
             <EditText
                 android:layout_width="match_parent"
@@ -192,8 +192,8 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="15dp"
-                android:text="Type your Message  (अपना संदेश टाइप करें)"
-                android:textSize="20dp"
+                android:text="Type your Message  (अपना संदेश लिखेंं)"
+                android:textSize="15dp"
                 android:layout_below="@+id/audioBtnLayout"
                 android:id="@+id/messagetext"/>
 
