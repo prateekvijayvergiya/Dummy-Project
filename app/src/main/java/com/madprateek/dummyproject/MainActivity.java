@@ -554,9 +554,9 @@ public class MainActivity extends AppCompatActivity {
             //FOR LOCATION
             case 400:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    mLocation = getLocation();
+                   // mLocation = getLocation();
                 }else {
-                    mLocation = getLocation();
+                  //  mLocation = getLocation();
                     //Toast.makeText(this, "You require permission for capturing location", Toast.LENGTH_SHORT).show();
                 }break;
 
@@ -747,10 +747,10 @@ public class MainActivity extends AppCompatActivity {
         cursor.close();
 
         cursor = getContentResolver().query(
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+                android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                null, MediaStore.Video.Media._ID + " = ? ", new String[]{document_id}, null);
         cursor.moveToFirst();
-        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA));
         cursor.close();
 
         return path;

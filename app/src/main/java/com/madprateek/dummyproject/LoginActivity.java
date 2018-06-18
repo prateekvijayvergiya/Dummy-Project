@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -26,7 +25,6 @@ public class LoginActivity extends AppCompatActivity {
 
     private EditText mUsername, mLoginPass;
     private Button mLoginBtn;
-    private TextView mAccText;
     SessionManager session;
     String loginUrl = "http://portal.jaipurrugsco.com/jrapi/public/soochana/validate";
     ProgressDialog mProgressDialog;
@@ -38,7 +36,6 @@ public class LoginActivity extends AppCompatActivity {
         mUsername = (EditText) findViewById(R.id.loginEmail);
         mLoginPass = (EditText) findViewById(R.id.loginPass);
         mLoginBtn = (Button) findViewById(R.id.loginBtn);
-        mAccText = (TextView) findViewById(R.id.switchtext);
         session = new SessionManager(getApplicationContext());
         mProgressDialog = new ProgressDialog(this);
 
@@ -55,14 +52,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        mAccText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                startActivity(new Intent(LoginActivity.this,SignUpActivity.class));
-                finish();
-            }
-        });
     }
 
     private void loginUser(final String username, final String pass) {
