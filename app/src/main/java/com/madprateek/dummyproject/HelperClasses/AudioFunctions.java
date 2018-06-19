@@ -93,7 +93,8 @@ public class AudioFunctions extends AppCompatActivity {
     private String getFilename()
     {
         long time = System.currentTimeMillis();
-        String filepath = Environment.getExternalStorageDirectory() + "/Android/data/com.madprateek.dummyproject/files/Pictures/" + "audio_" + time + ".mp3";
+        //String filepath = Environment.getExternalStorageDirectory() + "/Android/data/com.madprateek.dummyproject/files/Pictures/" + "audio_" + time + ".mp3";
+        String filepath = Environment.getExternalStorageDirectory().getPath() + "/Music/audio_" + time + ".mp3";
         Log.v("TAG","PATH is " + filepath);
        /* File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), filepath);
         Log.v("TAG","file is " + file);

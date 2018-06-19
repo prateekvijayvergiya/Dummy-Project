@@ -337,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
                 if (TextUtils.isEmpty(photoTitleText) && TextUtils.isEmpty(videoTitleText) && TextUtils.isEmpty(audioTitleText) &&
                         TextUtils.isEmpty(messageText)) {
                     Toast.makeText(MainActivity.this, "Please fill required details", Toast.LENGTH_SHORT).show();
-
                 } else {
                     if (!TextUtils.isEmpty(messageText)) {
                         messageText = messageText;

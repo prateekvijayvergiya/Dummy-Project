@@ -276,7 +276,7 @@ public class NetworkRequestHandler {
             if (ftpConnectionStatus) {
                 String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
                 dbVideoPath = "Videos_" + uploadTimeStamp + ".mp4";
-                boolean uploadvideoStatus = ftpclient.ftpUpload(path, "/soochana/" + dbVideoPath, "soochana", context);
+                boolean uploadvideoStatus = ftpclient.ftpUpload(path, "/soochana/" + attach.getServerId() + dbVideoPath, "soochana", context);
                 if (uploadvideoStatus) {
                     Log.v("TAG", "Uploading video successful");
                     //db.updateAttachmentVideoStatus(attach);
@@ -312,7 +312,7 @@ public class NetworkRequestHandler {
             if (ftpConnectionStatus){
                 String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
                 dbAudioPath = "Audio_" + uploadTimeStamp + ".mp3";
-                boolean uploadAudioStatus = ftpclient.ftpUpload(path, "/soochana/" + dbAudioPath, "soochana", context);
+                boolean uploadAudioStatus = ftpclient.ftpUpload(path, "/soochana/" + attach.getServerId() + dbAudioPath, "soochana", context);
                 if (uploadAudioStatus){
                     Log.v("TAG", "Uploading audio successful");
                     // db.updateAttachmentAudioStatus(attach);
