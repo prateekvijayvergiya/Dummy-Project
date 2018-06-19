@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
-                    .setPeriodic(20000)
+                    .setPeriodic(16 * 60 * 1000)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
             jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
         }
