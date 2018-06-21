@@ -1,5 +1,6 @@
 package com.madprateek.dummyproject.HelperClasses;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -97,7 +98,8 @@ public class SessionManager {
 
             // Staring Login Activity
             _context.startActivity(i);
-        }
+            ((Activity) _context).finish();
+    }
 
     }
 

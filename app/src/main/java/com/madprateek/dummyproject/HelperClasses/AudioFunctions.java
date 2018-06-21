@@ -29,7 +29,11 @@ public class AudioFunctions extends AppCompatActivity {
         myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
-        myAudioRecorder.setOutputFile(getFilename());
+        try {
+            myAudioRecorder.setOutputFile(getFilename());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -90,12 +94,22 @@ public class AudioFunctions extends AppCompatActivity {
         return outputFile;
     }
 
-    private String getFilename()
-    {
+    private String getFilename() throws IOException {
         long time = System.currentTimeMillis();
         //String filepath = Environment.getExternalStorageDirectory() + "/Android/data/com.madprateek.dummyproject/files/Pictures/" + "audio_" + time + ".mp3";
-        String filepath = Environment.getExternalStorageDirectory().getPath() + "/Music/audio_" + time + ".mp3";
-        Log.v("TAG","PATH is " + filepath);
+       // String filepath = Environment.getExternalStorageDirectory().getPath() + "/Music/audio_" + time + ".mp3";
+        //Log.v("TAG","PATH is " + filepath);
+
+        String fileName = "/Audio_" + time + ".mp3";
+        //File file = new File(Environment.DIRECTORY_MUSIC,fileName);
+       // if(!file.exists()){
+          //  file.mkdirs();}
+       /// String path = file.getAbsolutePath();
+       // File myDataPath = new File(SDCardpath
+        //        + "/.My Recordings");
+       // if (!myDataPath.exists())
+         //   myDataPath.mkdir();
+       // File audiofile = new File(myDataPath + "/" + fileName);
        /* File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), filepath);
         Log.v("TAG","file is " + file);
 
@@ -103,9 +117,13 @@ public class AudioFunctions extends AppCompatActivity {
             file.mkdirs();
         }*/
 
-        outputFile = filepath;     //file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".mp3";
+       // outputFile = filepath;     //file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".mp3";
 
-        Log.v("TAG","Storage Path is : " + outputFile);
-        return (outputFile);
+      String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + fileName;
+
+
+      outputFile = filePath;
+        Log.w("TAG","Storage Path is : " + outputFile);
+        return outputFile;
     }
 }

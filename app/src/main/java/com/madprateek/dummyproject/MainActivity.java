@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -90,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     private File image, video;
     String mPhotoPath, mVideoPath;
     private DatabaseHelper db;
-    String baseId, tempStatus = "0", mLocation = null, mDeviceId, mOutputFile = " ";
+    String baseId, tempStatus = "0", mLocation, mDeviceId, mOutputFile;
     SessionManager session;
     DeviceLocation deviceLocation;
     AudioFunctions audioFunctions;
@@ -100,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
     JobScheduler jobScheduler;
     //File image;
     Boolean imageStatus, videoStatus, uploadvideoStatus, uploadImageStatus;
+    LocationListener locationListener;
+    LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,16 +123,16 @@ public class MainActivity extends AppCompatActivity {
         mSubmitBtn = (Button) findViewById(R.id.submitBtn);
         db = new DatabaseHelper(this);
         ftpclient = new MyFTPClientFunctions();
-        session = new SessionManager(getApplicationContext());
+        session = new SessionManager(MainActivity.this);
         audioFunctions = new AudioFunctions(getApplicationContext());
-        //deviceLocation = new DeviceLocation();
+        deviceLocation = new DeviceLocation(MainActivity.this);
 
         //Log.v("TAG", "Location of device is : " + mLocation);
 
         session.checkLogin();
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+       /* if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
-        }
+        }*/
 
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_PHONE_STATE"}, REQUEST_PHONE_STATE);
@@ -144,8 +145,8 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
         }
 
-        //mLocation = getLocation();
-        //Log.v("TAG", "Location of device is : " + mLocation);
+        mLocation = getLocation();
+       // Log.v("TAG", "Location of device is : " + mLocation);
         //Audio Buttons
         mStartBtn = (Button) findViewById(R.id.StartBtn);
         mStopBtn = (Button) findViewById(R.id.StopBtn);
@@ -320,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                mOutputFile = audioFunctions.getOutputFile();
                 HashMap<String, String> user = session.getUserDetails();
                 String name = user.get(SessionManager.KEY_NAME);
                 String village = spinnerContent;
@@ -330,8 +332,7 @@ public class MainActivity extends AppCompatActivity {
                 String photoPath = mPhotoPath;
                 String videoPath = mVideoPath;
                 String audioPath = mOutputFile;
-                mOutputFile = audioFunctions.getOutputFile();
-                Log.v("TAG", "Audio path is : " + mOutputFile);
+                Log.w("TAG", "Audio path is : " + mOutputFile);
 
 
                 if (TextUtils.isEmpty(photoTitleText) && TextUtils.isEmpty(videoTitleText) && TextUtils.isEmpty(audioTitleText) &&
@@ -352,6 +353,9 @@ public class MainActivity extends AppCompatActivity {
                         audioTitleText = "";
 
 
+                   // mLocation = getLocation();
+                    Log.v("TAG","device Location during submission is : " + mLocation );
+                    //Toast.makeText(MainActivity.this, "Value of location in DB " + mLocation, Toast.LENGTH_SHORT).show();
                     storeBaseline(name, village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
                             photoPath, videoPath, audioPath);
 
@@ -372,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     if (!TextUtils.isEmpty(audioTitleText)) {
                         String subject = audioTitleText;
-                        String path = mOutputFile;
+                        String path = audioPath;
                         String type = "audio";
                         String status = "0";
                         storeAttachment(baseId, serverId, subject, path, type, status);
@@ -405,41 +409,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public String getLocation() {
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                mLocation = "Latitude : " + location.getLatitude() + " , " + "Longitude : " + location.getLongitude();
-                Log.v("TAG", "location is :" + "Latitude : " + location.getLatitude() + " , " + "Longitude : " + location.getLongitude());
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-
-            }
-        };
-
-
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
-        }
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-
-        String locationProvider = LocationManager.GPS_PROVIDER;
-        //locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
-        return mLocation;
-    }
 
     class NetworkTask extends AsyncTask<Void, Void, String> {
         private ArrayList<AttachmentModel> attachmentModels;
@@ -517,6 +486,8 @@ public class MainActivity extends AppCompatActivity {
 
                         chooseVideo();
                     }
+                }else {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
                 }
                 break;
             //Camera
@@ -545,18 +516,19 @@ public class MainActivity extends AppCompatActivity {
                     audioFunctions.startRec();
                     mOutputFile = audioFunctions.getOutputFile();
                 }else {
-                    mOutputFile = audioFunctions.getOutputFile();
-                    //Toast.makeText(this, "You require permission for capturing audio", Toast.LENGTH_SHORT).show();
+                    //mOutputFile = audioFunctions.getOutputFile();
+                    Toast.makeText(this, "You require permission for capturing audio", Toast.LENGTH_SHORT).show();
                 }
                 break;
 
             //FOR LOCATION
             case 400:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                   // mLocation = getLocation();
+                    mLocation = getLocation();
                 }else {
-                  //  mLocation = getLocation();
-                    //Toast.makeText(this, "You require permission for capturing location", Toast.LENGTH_SHORT).show();
+                    //mLocation = getLocation();
+                    Toast.makeText(this, "You require permission for capturing location", Toast.LENGTH_SHORT).show();
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
                 }break;
 
             //FOR device id
@@ -564,16 +536,17 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
                 }else{
-                    mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-                    // Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
+                    //mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+                    Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_PHONE_STATE"}, REQUEST_PHONE_STATE);
                 }
                 break;
 
             case 600:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                   mLocation = getLocation();
+                   //mLocation = getLocation();
                 }else{
-                    mLocation= getLocation();
+                   // mLocation= getLocation();
                     // Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
                 }
         }
@@ -833,6 +806,51 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public String getLocation() {
+        locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+                mLocation = "Latitude : " + location.getLatitude() + " , " + "Longitude : " + location.getLongitude();
+                //Log.v("TAG","Value of mLocation in main onLocationChanged :" + mLocation);
+               // Toast.makeText(MainActivity.this, "Return inside onLocation" + mLocation, Toast.LENGTH_SHORT).show();
+                //Log.v("TAG", "Latitude : " + location.getLatitude() + " , " + "Longitude : " + location.getLongitude());
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
+        };
+
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
+
+        } else {
+            //Log.v("TAG","Entered in else");
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+            return mLocation;
+        }
+
+       // Log.v("TAG","returning value in Main is :" + mLocation);
+       // Toast.makeText(this, "Return outside in Main onLocation" + mLocation, Toast.LENGTH_SHORT).show();
+        return mLocation;
     }
 
 }

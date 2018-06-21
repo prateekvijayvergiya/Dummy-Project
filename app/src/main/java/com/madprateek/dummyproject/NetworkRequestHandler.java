@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class NetworkRequestHandler {
 
@@ -80,8 +81,8 @@ public class NetworkRequestHandler {
         String message = base.getMessage();
         String villageName = base.getVillageName();
         String deviceId = base.getDeviceId();
-        //String location = base.getLocation();
-        String location = "India";
+        String location = base.getLocation();
+        //String location = "India";
         String photoSubject = base.getPhotoTitleText();
         String videoSubject = base.getVideoTitleText();
         String audioSubject = base.getAudioTitleText();
@@ -120,21 +121,6 @@ public class NetworkRequestHandler {
                         attach.setServerId(serverId);
                         //Log.v("TAg","Set new server id " + attach.getServerId());
                     }
-                  /*  globalAttach = (ArrayList<AttachmentModel>) db.getAllAttachmentsServer();
-                    int start = 1;
-                    for (AttachmentModel attach : globalAttach){
-                        //updateIdServer(attach);
-                        //Log.v("TAG","Check for attachment called");
-
-                        Log.v("TAG","value of start :" + start);
-                        start++;
-                        if (!attach.getServerId().equals(" ")){
-                            //Log.v("TAG","Server id in check attachment method is :" + attach.getServerId());
-                           // Log.v("TAG","Baseline id in local database is    :" + attach.getBaselineId());
-                            checkForAttachments(attach);
-                        }
-
-                    }*/
                     db.deleteBaseline(base);
                     Log.v("TAG","Baseline Data Deleted");
                 } catch (JSONException e) {
@@ -172,6 +158,8 @@ public class NetworkRequestHandler {
 
     
     private void sendNotification(String mimeType) {
+         AtomicInteger c = new AtomicInteger(0);
+         int id = c.incrementAndGet();
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.favicon)
                 .setContentTitle("Data Upload")
@@ -181,7 +169,7 @@ public class NetworkRequestHandler {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
 // notificationId is a unique int for each notification that you must define
-        notificationManager.notify(0, mBuilder.build());
+        notificationManager.notify(id, mBuilder.build());
     }
 
     private void updateServerDetails(final String id, final String path, final String mimeType, final AttachmentModel attach){

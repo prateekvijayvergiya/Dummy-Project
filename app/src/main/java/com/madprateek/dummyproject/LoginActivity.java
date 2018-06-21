@@ -68,6 +68,7 @@ public class LoginActivity extends AppCompatActivity {
                     finish();
                 }
                 else {
+                    mProgressDialog.dismiss();
                     Log.v("TAG","Response from server is : " + response);
                     Toast.makeText(LoginActivity.this, "login failed due to " + response, Toast.LENGTH_LONG).show();
                 }
