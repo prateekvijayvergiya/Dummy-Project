@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -159,6 +160,7 @@ public class NetworkRequestHandler {
     
     private void sendNotification(String mimeType) {
          AtomicInteger c = new AtomicInteger(0);
+         int m = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
          int id = c.incrementAndGet();
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.favicon)
@@ -169,7 +171,7 @@ public class NetworkRequestHandler {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
 // notificationId is a unique int for each notification that you must define
-        notificationManager.notify(id, mBuilder.build());
+        notificationManager.notify(m, mBuilder.build());
     }
 
     private void updateServerDetails(final String id, final String path, final String mimeType, final AttachmentModel attach){
@@ -223,7 +225,7 @@ public class NetworkRequestHandler {
             Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
             if (ftpConnectionStatus) {
                 String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-                dbPhotoPath = "Images_" + uploadTimeStamp + ".jpg";
+                dbPhotoPath = "_Images_" + uploadTimeStamp + ".jpg";
                 boolean uploadImageStatus = ftpclient.ftpUpload(photoPath, "/soochana/" + attach.getServerId() + dbPhotoPath , "soochana", context);
                 Log.d("Image Status", String.valueOf(uploadImageStatus));
 
@@ -263,7 +265,7 @@ public class NetworkRequestHandler {
             Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
             if (ftpConnectionStatus) {
                 String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-                dbVideoPath = "Videos_" + uploadTimeStamp + ".mp4";
+                dbVideoPath = "_Videos_" + uploadTimeStamp + ".mp4";
                 boolean uploadvideoStatus = ftpclient.ftpUpload(path, "/soochana/" + attach.getServerId() + dbVideoPath, "soochana", context);
                 if (uploadvideoStatus) {
                     Log.v("TAG", "Uploading video successful");
@@ -299,7 +301,7 @@ public class NetworkRequestHandler {
             Log.d("FTP Connection Status", String.valueOf(ftpConnectionStatus));
             if (ftpConnectionStatus){
                 String uploadTimeStamp = String.valueOf(Calendar.getInstance().getTimeInMillis());
-                dbAudioPath = "Audio_" + uploadTimeStamp + ".mp3";
+                dbAudioPath = "_Audio_" + uploadTimeStamp + ".mp3";
                 boolean uploadAudioStatus = ftpclient.ftpUpload(path, "/soochana/" + attach.getServerId() + dbAudioPath, "soochana", context);
                 if (uploadAudioStatus){
                     Log.v("TAG", "Uploading audio successful");
