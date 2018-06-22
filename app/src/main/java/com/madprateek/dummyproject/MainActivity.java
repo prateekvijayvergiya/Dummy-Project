@@ -338,6 +338,7 @@ public class MainActivity extends AppCompatActivity {
                 if (TextUtils.isEmpty(photoTitleText) && TextUtils.isEmpty(videoTitleText) && TextUtils.isEmpty(audioTitleText) &&
                         TextUtils.isEmpty(messageText)) {
                     Toast.makeText(MainActivity.this, "Please fill required details", Toast.LENGTH_SHORT).show();
+                    mPhotoTitleText.setError("This Field Empty");
                 } else {
                     if (!TextUtils.isEmpty(messageText)) {
                         messageText = messageText;
@@ -803,6 +804,7 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.submissionText){
 
             Intent intent = new Intent(MainActivity.this,SubmissionActivity.class);
+            intent.putExtra("deviceId",mDeviceId);
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);

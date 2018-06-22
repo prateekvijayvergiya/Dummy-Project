@@ -52,7 +52,7 @@ public class AudioFunctions extends AppCompatActivity {
         } catch (IOException ioe) {
             // make something
         }
-        Toast.makeText(ctx, "Recording started", Toast.LENGTH_LONG).show();
+        Toast.makeText(ctx, "Recording started", Toast.LENGTH_SHORT).show();
     }
 
     public void stopRec() {
@@ -64,18 +64,18 @@ public class AudioFunctions extends AppCompatActivity {
        // myAudioRecorder.stop();
         myAudioRecorder.release();
         myAudioRecorder = null;
-        Toast.makeText(ctx, "Audio Recorded successfully", Toast.LENGTH_LONG).show();
+        Toast.makeText(ctx, "Audio Recorded successfully", Toast.LENGTH_SHORT).show();
     }
 
     public void playRec(){
 
         MediaPlayer mediaPlayer = new MediaPlayer();
         try {
-            Toast.makeText(ctx, "Function call", Toast.LENGTH_LONG).show();
+            //Toast.makeText(ctx, "Function call", Toast.LENGTH_LONG).show();
             mediaPlayer.setDataSource(outputFile);
             mediaPlayer.prepare();
             mediaPlayer.start();
-            Toast.makeText(ctx, "Playing Audio", Toast.LENGTH_LONG).show();
+            Toast.makeText(ctx, "Playing Audio", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             // make something
             Log.v("TAG","There is some error : " + e.getMessage());
