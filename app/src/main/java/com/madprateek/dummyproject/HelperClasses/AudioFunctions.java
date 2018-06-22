@@ -8,7 +8,10 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.MediaController;
 import android.widget.Toast;
+
+import com.madprateek.dummyproject.R;
 
 import java.io.IOException;
 
@@ -17,6 +20,7 @@ public class AudioFunctions extends AppCompatActivity {
     private MediaRecorder myAudioRecorder;
     private String outputFile;
     private Context ctx;
+    MediaController mediaController;
 
     public AudioFunctions(Context ctx) {
         this.ctx = ctx;
@@ -76,6 +80,10 @@ public class AudioFunctions extends AppCompatActivity {
             mediaPlayer.prepare();
             mediaPlayer.start();
             Toast.makeText(ctx, "Playing Audio", Toast.LENGTH_SHORT).show();
+            mediaController = new MediaController(this);
+            mediaController.setAnchorView(findViewById(R.id.playBtn));
+            mediaController.requestFocus();
+            mediaController.show();
         } catch (Exception e) {
             // make something
             Log.v("TAG","There is some error : " + e.getMessage());
@@ -86,6 +94,7 @@ public class AudioFunctions extends AppCompatActivity {
 
         MediaPlayer mediaPlayer = new MediaPlayer();
         mediaPlayer.release();
+        mediaController.hide();
         mediaPlayer = null;
 
     }

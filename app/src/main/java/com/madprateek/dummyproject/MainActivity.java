@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
-                    .setPeriodic(16 * 60 * 1000)
+                    .setPeriodic(20000)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
             jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
         }
@@ -334,8 +334,73 @@ public class MainActivity extends AppCompatActivity {
                 String audioPath = mOutputFile;
                 Log.w("TAG", "Audio path is : " + mOutputFile);
 
+                checkForValidation();
+                if (checkForValidation()){
+                    if (!TextUtils.isEmpty(messageText)) {
+                        messageText = messageText;
+                    } else {
+                        messageText = "-";
+                    }
 
-                if (TextUtils.isEmpty(photoTitleText) && TextUtils.isEmpty(videoTitleText) && TextUtils.isEmpty(audioTitleText) &&
+                    if (TextUtils.isEmpty(photoTitleText))
+                        photoTitleText = "";
+                    if (TextUtils.isEmpty(videoTitleText))
+                        videoTitleText = "";
+                    if (TextUtils.isEmpty(audioTitleText))
+                        audioTitleText = "";
+
+
+                    // mLocation = getLocation();
+                    Log.v("TAG","device Location during submission is : " + mLocation );
+                    //Toast.makeText(MainActivity.this, "Value of location in DB " + mLocation, Toast.LENGTH_SHORT).show();
+                    storeBaseline(name, village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
+                            photoPath, videoPath, audioPath);
+
+                    //for getting the empty text
+                    if (!TextUtils.isEmpty(photoTitleText)) {
+                        String subject = photoTitleText;
+                        String path = mPhotoPath;
+                        String type = "photo";
+                        String status = "0";
+                        storeAttachment(baseId, serverId, subject, path, type, status);
+                    }
+                    if (!TextUtils.isEmpty(videoTitleText)) {
+                        String subject = videoTitleText;
+                        String path = mVideoPath;
+                        String type = "video";
+                        String status = "0";
+                        storeAttachment(baseId, serverId, subject, path, type, status);
+                    }
+                    if (!TextUtils.isEmpty(audioTitleText)) {
+                        String subject = audioTitleText;
+                        String path = audioPath;
+                        String type = "audio";
+                        String status = "0";
+                        storeAttachment(baseId, serverId, subject, path, type, status);
+                    }
+
+                    Connection connection = new Connection();
+                    if (connection.isConnectingToInternet(getApplicationContext())) {
+                        //ArrayList<AttachmentModel> allAttachments = (ArrayList) db.getAllAttachments();
+                        //ArrayList<BaselineModel> allBaselines = (ArrayList) db.getAllBaseline();
+                        //new NetworkTask(allAttachments, allBaselines).execute();
+                        jobScheduler.schedule(jobInfo);
+                        //jobID++;
+
+                    } else {
+
+                        jobScheduler.schedule(jobInfo);
+                        //jobID++;
+                        Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
+
+                    }
+
+                    Intent intent = new Intent(MainActivity.this, FinishActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+              /*  if (TextUtils.isEmpty(photoTitleText) && TextUtils.isEmpty(videoTitleText) && TextUtils.isEmpty(audioTitleText) &&
                         TextUtils.isEmpty(messageText)) {
                     Toast.makeText(MainActivity.this, "Please fill required details", Toast.LENGTH_SHORT).show();
                     mPhotoTitleText.setError("This Field Empty");
@@ -402,11 +467,56 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(MainActivity.this, FinishActivity.class);
                     startActivity(intent);
                     finish();
-                }
+                }*/
 
 
             }
         });
+
+    }
+
+
+    public boolean checkForValidation(){
+        boolean status = false;
+
+        String photoTitleText = mPhotoTitleText.getText().toString();
+        String videoTitleText = mVideoTitleText.getText().toString();
+        String audioTitleText = mAudioTitleText.getText().toString();
+        String messageText = mMessageText.getText().toString();
+        String photoPath = mPhotoPath;
+        String videoPath = mVideoPath;
+        String audioPath = mOutputFile;
+
+        if (photoPath != null){
+            if (photoTitleText.equals("")){
+               // Toast.makeText(MainActivity.this, "Please fill Title", Toast.LENGTH_SHORT).show();
+                mPhotoTitleText.setError("This Field Required");
+                return status;
+            }
+        }
+        if (videoPath != null){
+            if (videoTitleText.equals("")){
+               // Toast.makeText(MainActivity.this, "Please fill Title", Toast.LENGTH_SHORT).show();
+                mVideoTitleText.setError("This Field Required");
+                return status;
+            }
+        }
+        if (audioPath != null){
+            if (audioTitleText.equals("")){
+                //Toast.makeText(MainActivity.this, "Please fill Title", Toast.LENGTH_SHORT).show();
+                mAudioTitleText.setError("This Field Required");
+                return status;
+            }
+        }
+        if (TextUtils.isEmpty(photoTitleText) && TextUtils.isEmpty(videoTitleText) && TextUtils.isEmpty(audioTitleText) &&
+                TextUtils.isEmpty(messageText)) {
+            Toast.makeText(MainActivity.this, "Please fill required details", Toast.LENGTH_SHORT).show();
+            mPhotoTitleText.setError("This Field Required");
+            return status;
+        }else {
+            status = true;
+            return status;
+        }
 
     }
 
@@ -667,7 +777,10 @@ public class MainActivity extends AppCompatActivity {
                     mVideoShow.setVideoURI(uri);
                     MediaController mediaController = new MediaController(this);
                     mediaController.setAnchorView(mVideoShow);
+                    mediaController.show();
                     mVideoShow.setMediaController(mediaController);
+                    mediaController.setEnabled(true);
+                    mediaController.requestFocus();
                     mVideoPath = getVideoPath(uri);
                 }
 

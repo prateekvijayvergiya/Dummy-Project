@@ -23,7 +23,7 @@ public class SubmissionActivity extends AppCompatActivity {
     Context context;
     private TextView mSubmitted,mPending;
     DatabaseHelper db = new DatabaseHelper(this);
-    
+
     public SubmissionActivity(){
 
     }
