@@ -352,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // mLocation = getLocation();
                     Log.v("TAG","device Location during submission is : " + mLocation );
-                    //Toast.makeText(MainActivity.this, "Value of location in DB " + mLocation, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Value of location in DB " + mLocation, Toast.LENGTH_SHORT).show();
                     storeBaseline(name, village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
                             photoPath, videoPath, audioPath);
 
@@ -597,9 +597,9 @@ public class MainActivity extends AppCompatActivity {
 
                         chooseVideo();
                     }
-                }else {
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
-                }
+                }//else {
+                    //ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
+                //}
                 break;
             //Camera
             case 100:
@@ -628,7 +628,7 @@ public class MainActivity extends AppCompatActivity {
                     mOutputFile = audioFunctions.getOutputFile();
                 }else {
                     //mOutputFile = audioFunctions.getOutputFile();
-                    Toast.makeText(this, "You require permission for capturing audio", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(this, "You require permission for capturing audio", Toast.LENGTH_SHORT).show();
                 }
                 break;
 
@@ -638,8 +638,8 @@ public class MainActivity extends AppCompatActivity {
                     mLocation = getLocation();
                 }else {
                     //mLocation = getLocation();
-                    Toast.makeText(this, "You require permission for capturing location", Toast.LENGTH_SHORT).show();
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
+                    //Toast.makeText(this, "You require permission for capturing location", Toast.LENGTH_SHORT).show();
+                  //  ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
                 }break;
 
             //FOR device id
@@ -648,8 +648,8 @@ public class MainActivity extends AppCompatActivity {
                     mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
                 }else{
                     //mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-                    Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_PHONE_STATE"}, REQUEST_PHONE_STATE);
+                    //Toast.makeText(this, "This app require device Id", Toast.LENGTH_SHORT).show();
+                   // ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_PHONE_STATE"}, REQUEST_PHONE_STATE);
                 }
                 break;
 
