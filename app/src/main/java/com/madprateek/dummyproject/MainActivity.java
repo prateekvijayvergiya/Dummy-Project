@@ -101,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
     Boolean imageStatus, videoStatus, uploadvideoStatus, uploadImageStatus;
     LocationListener locationListener;
     LocationManager locationManager;
+    String[] PERMISSIONS = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_FINE_LOCATION};
+    int PERMISSION_ALL = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,11 +133,12 @@ public class MainActivity extends AppCompatActivity {
         //Log.v("TAG", "Location of device is : " + mLocation);
 
         session.checkLogin();
+        askPermission();
        /* if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, REQUEST_LOCATION);
         }*/
 
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+  /*  -----    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_PHONE_STATE"}, REQUEST_PHONE_STATE);
         } else
             mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
@@ -143,9 +147,9 @@ public class MainActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission is not granted
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, REQUEST_STORAGE);
-        }
+        }*/
 
-        mLocation = getLocation();
+       // mLocation = getLocation();
        // Log.v("TAG", "Location of device is : " + mLocation);
         //Audio Buttons
         mStartBtn = (Button) findViewById(R.id.StartBtn);
@@ -161,13 +165,13 @@ public class MainActivity extends AppCompatActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
-                    .setPeriodic(16 * 60 * 1000)
+                    .setPeriodic(16 * 60 * 1000, 5 * 60 * 1000)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
             jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
 
         } else {
             jobInfo = new JobInfo.Builder(jobID, new ComponentName(getApplicationContext(), MyJobService.class))
-                    .setPeriodic(20000)
+                    .setPeriodic(10 * 60 * 1000)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
             jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
         }
@@ -350,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
                         audioTitleText = "";
 
 
-                    // mLocation = getLocation();
+                     mLocation = getLocation();
                     Log.v("TAG","device Location during submission is : " + mLocation );
                     Toast.makeText(MainActivity.this, "Value of location in DB " + mLocation, Toast.LENGTH_SHORT).show();
                     storeBaseline(name, village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
@@ -385,12 +389,12 @@ public class MainActivity extends AppCompatActivity {
                         //ArrayList<BaselineModel> allBaselines = (ArrayList) db.getAllBaseline();
                         //new NetworkTask(allAttachments, allBaselines).execute();
                         jobScheduler.schedule(jobInfo);
-                        //jobID++;
+                        jobID++;
 
                     } else {
 
                         jobScheduler.schedule(jobInfo);
-                        //jobID++;
+                        jobID++;
                         Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
 
                     }
@@ -473,6 +477,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void askPermission() {
+        for (String permission : PERMISSIONS) {
+            if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this,PERMISSIONS,PERMISSION_ALL);
+                return;
+            }else {
+                mLocation = getLocation();
+                mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+            }
+        }
     }
 
 
@@ -584,6 +600,17 @@ public class MainActivity extends AppCompatActivity {
 
         switch (requestCode) {
 
+            case 1:{
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[2] == PackageManager.PERMISSION_GRANTED ){
+                    //Do your work.
+                    mLocation = getLocation();
+                    mDeviceId = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+                } else {
+                    Toast.makeText(this, "Until you grant the permission, we cannot proceed further", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
             //Gallery
             case 200:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
