@@ -1,6 +1,7 @@
 package com.madprateek.dummyproject.HelperClasses;
 
 import android.annotation.SuppressLint;
+import android.arch.lifecycle.LiveData;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -14,6 +15,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import androidx.work.Constraints;
+import androidx.work.WorkManager;
+import androidx.work.WorkStatus;
 import androidx.work.Worker;
 
 public class CompressWorker extends Worker {
@@ -21,12 +25,10 @@ public class CompressWorker extends Worker {
     DatabaseHelper db;
     ArrayList<AttachmentModel> allAttachments ;
     ArrayList<BaselineModel> allBaselines ;
-    NetworkRequestHandler nrh ;
     String uploadTimeStamp;
 
     public CompressWorker(){
         super();
-        db = new DatabaseHelper(getApplicationContext());
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         uploadTimeStamp = timeStamp;
     }
@@ -34,20 +36,21 @@ public class CompressWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        if(Connection.isConnectingToInternet(getApplicationContext())){
-            Log.d("service status :","device online");
-            nrh= new NetworkRequestHandler(getApplicationContext(),allAttachments,allBaselines);
+        db = new DatabaseHelper(getApplicationContext());
+
+        Log.d("service status :","device online");
+
             allAttachments=(ArrayList)db.getAllAttachments();
             allBaselines=(ArrayList)db.getAllBaseline();
-            new NetworkTask(allAttachments,allBaselines).execute();
+            Log.d("Work Count:",allAttachments.size()+" "+allBaselines.size());
+            NetworkRequestHandler nrh = new NetworkRequestHandler(getApplicationContext(),allAttachments,allBaselines);
+            nrh.uploadAllData();
+
             return Result.SUCCESS;
-        }else{
-            Log.d("service status :","device offline");
-            return null;
-        }
 
     }
 
+/*
     class NetworkTask extends AsyncTask<Void,Void,String> {
         private ArrayList<AttachmentModel> attachmentModels;
         private ArrayList<BaselineModel> baselineModels;
@@ -77,4 +80,5 @@ public class CompressWorker extends Worker {
             Log.d("Job Service","Data Upload Finished");
         }
     }
+*/
 }

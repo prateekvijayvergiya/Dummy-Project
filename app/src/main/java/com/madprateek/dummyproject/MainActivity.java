@@ -3,6 +3,7 @@ package com.madprateek.dummyproject;
 import android.Manifest;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.arch.lifecycle.Observer;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,6 +18,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -55,9 +57,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
+import androidx.work.WorkStatus;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -83,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String password = "u701aC/}9S";
     String serverId = null;
     MyFTPClientFunctions ftpclient = null;
-    String server_url_baseline = "http://192.168.12.160/Baseline.php";
-    String server_url_attachments = "http://192.168.12.160/attachments.php";
+    String server_url_baseline = "http://192.168.0.104/Baseline.php";
+    String server_url_attachments = "http://192.168.0.104/attachments.php";
 
     private ImageView mImageShow;
     private VideoView mVideoShow;
@@ -110,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
     int PERMISSION_ALL = 1;
     WorkManager workManager;
     WorkRequest callDataRequest;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         final PeriodicWorkRequest.Builder callDataRequest = new PeriodicWorkRequest.Builder(CompressWorker.class,
-                16, TimeUnit.MINUTES, 5, TimeUnit.MINUTES);
+                16, TimeUnit.MINUTES, 5, TimeUnit.MINUTES).setConstraints(new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build());
         final PeriodicWorkRequest photoCheckWork = callDataRequest.build();
 
 
@@ -395,6 +402,12 @@ public class MainActivity extends AppCompatActivity {
                         //jobID++;
                         workManager.enqueue(photoCheckWork);
                         Toast.makeText(getApplicationContext(), "Please Check your Internet Connectivity", Toast.LENGTH_LONG).show();
+                        WorkManager.getInstance().getStatusById(photoCheckWork.getId()).observeForever(new Observer<WorkStatus>() {
+                            @Override
+                            public void onChanged(@Nullable WorkStatus workStatus) {
+                                Log.d("Work Manager Job Status",workStatus.toString());
+                            }
+                        });
 
                     }
 
