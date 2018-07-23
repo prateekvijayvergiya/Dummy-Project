@@ -23,7 +23,7 @@
         android:layout_marginLeft="25dp"
         android:layout_marginTop="10dp"
         android:layout_marginRight="25dp"
-        android:hint="Email Id"
+        android:hint="Username"
         android:id="@+id/loginEmail"/>
 
     <EditText

@@ -70,7 +70,7 @@ public class LoginActivity extends AppCompatActivity {
                 else {
                     mProgressDialog.dismiss();
                     Log.v("TAG","Response from server is : " + response);
-                    Toast.makeText(LoginActivity.this, "login failed due to " + response, Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "Invalid Credentials", Toast.LENGTH_LONG).show();
                 }
             }
         }, new Response.ErrorListener() {

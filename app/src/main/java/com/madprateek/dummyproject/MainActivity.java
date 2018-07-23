@@ -360,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
 
                      mLocation = getLocation();
                     Log.v("TAG","device Location during submission is : " + mLocation );
-                    Toast.makeText(MainActivity.this, "Value of location in DB " + mLocation, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this, "Value of location in DB " + mLocation, Toast.LENGTH_SHORT).show();
                     storeBaseline(name, village, mLocation, messageText, mDeviceId, photoTitleText, videoTitleText, audioTitleText,
                             photoPath, videoPath, audioPath);
 

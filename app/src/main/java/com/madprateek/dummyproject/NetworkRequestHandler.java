@@ -113,7 +113,7 @@ public class NetworkRequestHandler {
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    Toast.makeText(context, "Response :" + response, Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(context, "Response :" + response, Toast.LENGTH_SHORT).show();
                     serverId = response.getString("baselineId");
                     updatedId = serverId;
                    // Log.v("TAG","SERVER ID IS : " + serverId);
